@@ -77,10 +77,10 @@
     <IncludePath>C:\sdks\sfml3\include;C:\sdks\asio-1.30.2\include;C:\Users\jlhar\OneDrive\Desktop\VS_PJX\MMO_NETCOMMON_Master\NetCommon;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\sdks\sfml3\include;C:\sdks\asio-1.30.2\include;C:\Users\jlhar\OneDrive\Desktop\VS_PJX\MMO_NETCOMMON_Master\NetCommon;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\sfml3\include;$(SolutionDir)..\asio-1.30.2\include;$(SolutionDir)..\NetCommon;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\sdks\sfml3\include;C:\sdks\asio-1.30.2\include;C:\Users\jlhar\OneDrive\Desktop\VS_PJX\MMO_NETCOMMON_Master\NetCommon;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\sfml3\include;$(SolutionDir)..\asio-1.30.2\include;$(SolutionDir)..\NetCommon;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -125,7 +125,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\sdks\sfml3\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\sfml3\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>winmm.lib;opengl32.lib;freetype.lib;gdi32.lib;flac.lib;vorbisfile.lib;vorbisenc.lib;vorbis.lib;ogg.lib;sfml-system-s-d.lib;sfml-window-s-d.lib;sfml-graphics-s-d.lib;sfml-audio-s-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
