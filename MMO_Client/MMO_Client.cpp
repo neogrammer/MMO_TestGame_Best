@@ -171,19 +171,29 @@ class MMOGame : cnet::client_interface<GameMsg>
 
 	struct WorldObject
 	{
+		uint32_t ownerID{ 10000 };
 		sf::Vector2f pos{ 0.f,0.f };
 		sf::Vector2f vel{ 0.f,0.f };
 		float fRad{ 0.5f };
 	};
 
+	enum class Direction
+	{
+		N, NE, E, SE, S, SW, W, NW
+	};
+
 	WorldObject object;
+	Direction currDir;
+
+	std::map<uint32_t, std::vector<WorldObject>> projectiles;
 
 public:
 	MMOGame()
 		: tv{ sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed }
 		, sAppName{ "MMO Client" }
 	{
-		
+		projectiles.clear();
+		currDir = Direction::S;
 	}
 
 private:
@@ -295,6 +305,11 @@ public:
 						mapObjects[nPlayerID].nUniqueID = nPlayerID;
 						mapObjects[nPlayerID].fRadius = 32.f;
 						mapObjects[nPlayerID].vPos = { 3.0f,3.0f };
+
+						projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
+						projectiles[nPlayerID].clear();
+
+
 						break;
 					}
 
@@ -303,7 +318,8 @@ public:
 						sPlayerDescription desc;
 						msg >> desc;
 						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-
+						projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
+						projectiles[desc.nUniqueID].clear();
 						if (desc.nUniqueID == nPlayerID)
 						{
 							// Now we exist in game world
@@ -317,6 +333,7 @@ public:
 						uint32_t nRemovalID = 0;
 						msg >> nRemovalID;
 						mapObjects.erase(nRemovalID);
+						projectiles.erase(nRemovalID);
 						break;
 					}
 
@@ -348,7 +365,7 @@ public:
 			}
 			while (tv.isOpen())
 			{
-				
+
 
 
 				while (!Incoming().empty())
@@ -414,8 +431,9 @@ public:
 					}
 				}
 
+
+
 				dt = timer.getElapsedTime().asSeconds();
-				object.vel = { 0.f,0.f };
 				while (const std::optional event = tv.pollEvent())
 				{
 					if (event->is<sf::Event::Closed>())
@@ -442,7 +460,8 @@ public:
 								tv.close();
 								break;
 							}
-						
+							
+
 						}
 					}
 					else if (event->is<sf::Event::MouseWheelScrolled>())
@@ -481,34 +500,122 @@ public:
 				}
 				// Control of Player Object
 				//mapObjects[nPlayerID].vVel = { 0.f,0.f };
+				object.vel = { 0.f,0.f };
+
 				if (isFocused)
 				{
-					//mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-					{ 
-						object.vel.y = -0.02f;
-						//mapObjects[nPlayerID].vVel.y = -0.02f;
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+					{
+						currDir = Direction::NW;
+						object.vel = { -0.0177f, -0.0177f };
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-						object.vel.y = 0.02f;
-					}// mapObjects[nPlayerID].vVel.y = 0.02f; }
-					else {
-						object.vel.y = 0.0f;
-					} ///mapObjects[nPlayerID].vVel.y = 0.f; }
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+					{
+						currDir = Direction::NE;
+						object.vel = { 0.0177f, -0.0177f };
 
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-						object.vel.x = -0.02f;
-					} //mapObjects[nPlayerID].vVel.x = -0.02f; }
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-						object.vel.x = 0.02f;
-					}//mapObjects[nPlayerID].vVel.x = 0.02f; }
-					else {
-						object.vel.x = 0.0f;
-					} //mapObjects[nPlayerID].vVel.x = 0.f; }
+
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+					{
+						currDir = Direction::SW;
+						object.vel = { -0.0177f, 0.0177f };
+
+					}
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D))
+					{
+						currDir = Direction::SE;
+						object.vel = { 0.0177f, 0.0177f };
+
+					}
+					//mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
+					else
+					{
+
+						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+						{
+							object.vel.y = -0.02f;
+							//mapObjects[nPlayerID].vVel.y = -0.02f;
+							currDir = Direction::N;
+
+
+						}
+						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+							object.vel.y = 0.02f;
+							currDir = Direction::S;
+						}// mapObjects[nPlayerID].vVel.y = 0.02f; }
+
+
+						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+							object.vel.x = -0.02f;
+							currDir = Direction::W;
+
+						} //mapObjects[nPlayerID].vVel.x = -0.02f; }
+						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+							object.vel.x = 0.02f;
+							currDir = Direction::E;
+
+						}//mapObjects[nPlayerID].vVel.x = 0.02f; }
+
+					}
+				}
 
 				
-					
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space))
+				{
+					auto& p = projectiles[nPlayerID];
+					p.emplace_back(WorldObject{});
+					p[p.size() - 1].ownerID = nPlayerID;
+					p[p.size() - 1].pos = object.pos;
+					p[p.size() - 1].vel = { 0.f,0.f };
+					p[p.size() - 1].fRad = 1.f;
 
+					switch (currDir) {
+					case Direction::N:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ 0.f,-.002f };
+					}
+					break;
+					case Direction::NE:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ .00177f,-.00177f };
+					}
+					break;
+					case Direction::E:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ .002f,0.f };
+					}
+					break;
+					case Direction::SE:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ .00177f,.00177f };
+					}
+					break;
+					case Direction::S:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ 0.f,.002f };
+					}
+					break;
+					case Direction::SW:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ -.00177f,.00177f };
+					}
+					break;
+					case Direction::W:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ -0.002f,0.f };
+					}
+					break;
+					case Direction::NW:
+					{
+						p[p.size() - 1].vel = sf::Vector2f{ -.00177f,-.00177f };
+					}
+					break;
+					default:
+					{
+					}
+					break;
+					}
 				}
 
 
@@ -519,26 +626,26 @@ public:
 
 				sf::Vector2f vPotentialPosition = object.pos + (object.vel * dt);
 
-			/*	if (mapObjects[nPlayerID].vVel.length() > 0)
-				{
-					if (mapObjects[nPlayerID].vVel.x > 3.f)
+				/*	if (mapObjects[nPlayerID].vVel.length() > 0)
 					{
-						mapObjects[nPlayerID].vVel.x = 3.f;
-					}
-					else if (mapObjects[nPlayerID].vVel.x < -3.f)
-					{
-						mapObjects[nPlayerID].vVel.x = -3.f;
-					}
-					else if (mapObjects[nPlayerID].vVel.y > 3.f)
-					{
-						mapObjects[nPlayerID].vVel.y = 3.f;
-					}
-					else if (mapObjects[nPlayerID].vVel.y < -3.f)
-					{
-						mapObjects[nPlayerID].vVel.y = -3.f;
-					}
-					
-				}*/
+						if (mapObjects[nPlayerID].vVel.x > 3.f)
+						{
+							mapObjects[nPlayerID].vVel.x = 3.f;
+						}
+						else if (mapObjects[nPlayerID].vVel.x < -3.f)
+						{
+							mapObjects[nPlayerID].vVel.x = -3.f;
+						}
+						else if (mapObjects[nPlayerID].vVel.y > 3.f)
+						{
+							mapObjects[nPlayerID].vVel.y = 3.f;
+						}
+						else if (mapObjects[nPlayerID].vVel.y < -3.f)
+						{
+							mapObjects[nPlayerID].vVel.y = -3.f;
+						}
+
+					}*/
 
 				sf::Vector2i vCurrentCell = { (int)(floorf(object.pos.x)), (int)(floorf(object.pos.y)) };
 				sf::Vector2i vTargetCell = sf::Vector2i({ (int)vPotentialPosition.x, (int)vPotentialPosition.y });
@@ -569,8 +676,8 @@ public:
 							vNearestPoint.y = (float)std::max(float(vCell.y), std::min((vPotentialPosition.y), float(vCell.y + 1)));
 
 							//				// But modified to work :P
-							sf::Vector2f vRayToNearest = { vNearestPoint.x - (vPotentialPosition.x), vNearestPoint.y - (vPotentialPosition.y)};
-						
+							sf::Vector2f vRayToNearest = { vNearestPoint.x - (vPotentialPosition.x), vNearestPoint.y - (vPotentialPosition.y) };
+
 							float fOverlap = (object.fRad - vRayToNearest.length());
 							if (std::isnan(fOverlap)) fOverlap = 0;// Thanks Dandistine!
 
@@ -581,7 +688,7 @@ public:
 							{
 								//					// Statically resolve the collision
 								//			
-								sf::Vector2f tmp = (vRayToNearest == sf::Vector2f{ 0.f, 0.f }) ? sf::Vector2f{0.f, 0.f} : vRayToNearest.normalized();
+								sf::Vector2f tmp = (vRayToNearest == sf::Vector2f{ 0.f, 0.f }) ? sf::Vector2f{ 0.f, 0.f } : vRayToNearest.normalized();
 								vPotentialPosition = vPotentialPosition - (tmp * fOverlap);
 							}
 						}
@@ -589,6 +696,69 @@ public:
 				}
 
 				object.pos = vPotentialPosition;
+
+
+				// now update the bullets locally and check for collision, then send this players updated bullets to the server in a loop which will update all the players with all those bullets, and the other players will do the same
+				for (auto& playerBullets : projectiles)
+				{
+					for (auto& bullet : playerBullets.second)
+					{
+
+						sf::Vector2f bulletPoss = bullet.pos + (bullet.vel * dt);
+
+						sf::Vector2i vCurrentCell = { (int)(floorf(bullet.pos.x)), (int)(floorf(bullet.pos.y)) };
+						sf::Vector2i vTargetCell = sf::Vector2i({ (int)bulletPoss.x, (int)bulletPoss.y });
+						int vAreaTop = maximum(((int)(minimum(vCurrentCell.y, vTargetCell.y) - 1)), (int)0);
+						int vAreaLeft = maximum(((int)(minimum(vCurrentCell.x, vTargetCell.x) - 1)), (int)0);
+						int vAreaBttm = minimum((maximum(vCurrentCell.y, vTargetCell.y) + 3), (vWorldSize.y - 1));
+						int vAreaRight = minimum((maximum(vCurrentCell.x, vTargetCell.x) + 3), (vWorldSize.x - 1));
+
+
+						//	// Iterate through each cell in test area
+						sf::Vector2i vCell;
+						for (vCell.y = vAreaTop; vCell.y <= vAreaBttm; vCell.y++)
+						{
+							for (vCell.x = vAreaLeft; vCell.x <= vAreaRight; vCell.x++)
+							{
+								// Check if the cell is actually solid...
+							//	sf::Vector2f vCellMiddle = vCell.floor();
+								if (sWorldMap[vCell.y * vWorldSize.x + vCell.x] == '#')
+								{
+									// ...it is! So work out nearest point to future player position, around perimeter
+									// of cell rectangle. We can test the distance to this point to see if we have
+									// collided.
+
+									sf::Vector2f vNearestPoint;
+									//				// Inspired by this (very clever btw) 
+									//				// https://stackoverflow.com/questions/45370692/circle-rectangle-collision-response
+									vNearestPoint.x = (float)std::max(float(vCell.x), std::min((bulletPoss.x), float(vCell.x + 1)));
+									vNearestPoint.y = (float)std::max(float(vCell.y), std::min((bulletPoss.y), float(vCell.y + 1)));
+
+									//				// But modified to work :P
+									sf::Vector2f vRayToNearest = { vNearestPoint.x - (bulletPoss.x), vNearestPoint.y - (bulletPoss.y) };
+
+									float fOverlap = (object.fRad - vRayToNearest.length());
+									if (std::isnan(fOverlap)) fOverlap = 0;// Thanks Dandistine!
+
+									//				// If overlap is positive, then a collision has occurred, so we displace backwards by the 
+									//				// overlap amount. The potential position is then tested against other tiles in the area
+									//				// therefore "statically" resolving the collision
+									if (fOverlap > 0)
+									{
+										//					// Statically resolve the collision
+										
+										
+										// change to hit target instead of static collide			
+										sf::Vector2f tmp = (vRayToNearest == sf::Vector2f{ 0.f, 0.f }) ? sf::Vector2f{ 0.f, 0.f } : vRayToNearest.normalized();
+										bulletPoss = bulletPoss - (tmp * fOverlap);
+
+									}
+								}
+							}
+						}
+						bullet.pos = bulletPoss;
+					}
+				}
 
 				// Update objects locally
 				//auto& obj = object;
@@ -750,6 +920,7 @@ public:
 					}
 				}
 
+			
 				
 
 				// Draw World Objects
@@ -793,6 +964,11 @@ public:
 					//sf::Vector2i vNameSize = GetTextSizeProp("ID: " + std::to_string(object.first));
 					//tv.DrawStringPropDecal(object.second.vPos - sf::Vector2f{ vNameSize.x * 0.5f * 0.25f * 0.125f, -object.second.fRadius * 1.25f }, "ID: " + std::to_string(object.first), olc::BLUE, { 0.25f, 0.25f });
 				}
+
+
+				
+
+
 				sf::Text nameText{ fnt };
 
 				if (object.vel != sf::Vector2f{ 0.f, 0.f })
@@ -821,6 +997,18 @@ public:
 				bounds.setPosition({float(vAreaLeft * tileSize),float(vAreaTop * tileSize)});
 				bounds.setFillColor(sf::Color(47, 147, 247, 53));
 				tv.draw(bounds);
+
+				for (auto& playerBullets : projectiles)
+				{
+					for (auto& bullet : playerBullets.second)
+					{
+						sf::CircleShape shp{ 3.f };
+						shp.setFillColor(sf::Color::Yellow);
+						shp.setPosition({ bullet.pos.x * tileSize, bullet.pos.y * tileSize });
+						tv.draw(shp);
+					}
+				}
+
 
 				// Draw Name
 				sf::RectangleShape plaque{ {180.f,60.f} };

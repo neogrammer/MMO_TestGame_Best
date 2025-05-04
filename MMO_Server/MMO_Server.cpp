@@ -103,7 +103,7 @@ protected:
 
 		case GameMsg::Game_UpdatePlayer:
 		{
-			sPlayerDescription desc;
+			/*sPlayerDescription desc;
 			msg >> desc;
 			for (auto& p : m_mapPlayerRoster)
 			{
@@ -111,13 +111,13 @@ protected:
 				{
 					cnet::message<GameMsg> msgUpdatePlayer;
 					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
-					msgUpdatePlayer << desc;
-					MessageAllClients(msgUpdatePlayer, client);
-					break;
-				}
-			}
-			// Simply bounce update to everyone except incoming client
-			
+					msgUpdatePlayer << desc;*/
+			MessageAllClients(msg, client);
+		
+			//		}
+				//}
+				// Simply bounce update to everyone except incoming client
+		
 			break;
 		}
 
