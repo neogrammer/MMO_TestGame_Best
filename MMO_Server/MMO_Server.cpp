@@ -9,9 +9,12 @@ class GameServer : public cnet::server_interface<GameMsg>
 public:
 	GameServer(uint16_t nPort) : cnet::server_interface<GameMsg>(nPort)
 	{
+		m_mapPlayerBullets.clear();
 	}
 
 	std::unordered_map<uint32_t, sPlayerDescription> m_mapPlayerRoster;
+	std::unordered_map<uint32_t, std::vector<BulletDescription>> m_mapPlayerBullets;
+
 	std::vector<uint32_t> m_vGarbageIDs;
 
 protected:
@@ -25,6 +28,10 @@ protected:
 	{
 		// Client passed validation check, so send them a message informing
 		// them they can continue to communicate
+		m_mapPlayerBullets[client->GetID()] = std::vector<BulletDescription>{};
+		m_mapPlayerBullets[client->GetID()].clear();
+
+
 		cnet::message<GameMsg> msg;
 		msg.header.id = GameMsg::Client_Accepted;
 		client->Send(msg);
@@ -118,6 +125,88 @@ protected:
 				//}
 				// Simply bounce update to everyone except incoming client
 		
+			break;
+		}
+
+
+		case GameMsg::Game_AddBullet:
+		{
+			/*sPlayerDescription desc;
+			msg >> desc;
+			for (auto& p : m_mapPlayerRoster)
+			{
+				if (p.first == desc.nUniqueID)
+				{
+					cnet::message<GameMsg> msgUpdatePlayer;
+					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
+					msgUpdatePlayer << desc;*/
+
+			BulletDescription desc;
+			msg >> desc;
+			m_mapPlayerBullets[client->GetID()].push_back(desc);
+			uint32_t idx = (uint32_t)(m_mapPlayerBullets[client->GetID()].size() - 1);
+			desc.index = idx;
+			cnet::message<GameMsg> msgAddBullet;
+			msgAddBullet.header.id = GameMsg::Game_AddBullet;
+			msgAddBullet << desc;
+
+			MessageAllClients(msgAddBullet, client);
+
+			//		}
+				//}
+				// Simply bounce update to everyone except incoming client
+
+			break;
+		}
+
+		case GameMsg::Game_RemoveBullet:
+		{
+			/*sPlayerDescription desc;
+			msg >> desc;
+			for (auto& p : m_mapPlayerRoster)
+			{
+				if (p.first == desc.nUniqueID)
+				{
+					cnet::message<GameMsg> msgUpdatePlayer;
+					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
+					msgUpdatePlayer << desc;*/
+			BulletDescription desc;
+			msg >> desc;
+			
+			uint32_t idx = desc.index;
+		
+			m_mapPlayerBullets[desc.nUniqueID].erase(m_mapPlayerBullets[desc.nUniqueID].begin() + idx);
+			cnet::message<GameMsg> msgRemoveBullet;
+			msgRemoveBullet.header.id = GameMsg::Game_RemoveBullet;
+			msgRemoveBullet << desc;
+
+			MessageAllClients(msgRemoveBullet, client);
+
+
+			//		}
+				//}
+				// Simply bounce update to everyone except incoming client
+
+			break;
+		}
+
+		case GameMsg::Game_UpdateBullet:
+		{
+			/*sPlayerDescription desc;
+			msg >> desc;
+			for (auto& p : m_mapPlayerRoster)
+			{
+				if (p.first == desc.nUniqueID)
+				{
+					cnet::message<GameMsg> msgUpdatePlayer;
+					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
+					msgUpdatePlayer << desc;*/
+			MessageAllClients(msg, client);
+
+			//		}
+				//}
+				// Simply bounce update to everyone except incoming client
+
 			break;
 		}
 

@@ -14,6 +14,9 @@ enum class GameMsg : uint32_t
 	Game_AddPlayer,
 	Game_RemovePlayer,
 	Game_UpdatePlayer,
+	Game_AddBullet,
+	Game_RemoveBullet,
+	Game_UpdateBullet
 };
 
 enum class AnimDir
@@ -42,4 +45,15 @@ struct sPlayerDescription
 	uint32_t currFrame = 0;
 	
 
+};
+
+struct BulletDescription
+{
+	uint32_t nUniqueID = 0;
+	float fRad = 1.f;
+
+	sf::Vector2f pos = { 0.f,0.f };
+	sf::Vector2f vel = { 0.f,0.f };
+
+	uint32_t index = 0;
 };

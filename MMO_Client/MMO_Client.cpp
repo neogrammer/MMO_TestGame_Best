@@ -427,6 +427,38 @@ public:
 						break;
 					}
 
+					case(GameMsg::Game_AddBullet):
+					{
+						BulletDescription desc;
+						msg >> desc;
+						if (projectiles.find(desc.nUniqueID) == projectiles.end())
+						{
+							projectiles[desc.nUniqueID] = std::vector<WorldObject>{};
+							projectiles[desc.nUniqueID].clear();
+						}
+						projectiles[desc.nUniqueID].emplace_back(WorldObject{});
+						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].pos = desc.pos;
+						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].vel = desc.vel;
+						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].fRad = desc.fRad;
+						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].ownerID = desc.nUniqueID;
+
+						break;
+					}
+
+					case(GameMsg::Game_RemoveBullet):
+					{
+						BulletDescription desc;
+						msg >> desc;
+						projectiles[desc.nUniqueID].erase(projectiles[desc.nUniqueID].begin() + (desc.index));
+						break;
+					}
+
+					case(GameMsg::Game_UpdateBullet):
+					{
+						
+						break;
+					}
+
 
 					}
 				}
@@ -558,66 +590,78 @@ public:
 						}//mapObjects[nPlayerID].vVel.x = 0.02f; }
 
 					}
+
+
+
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space))
+					{
+						auto& p = projectiles[nPlayerID];
+						p.emplace_back(WorldObject{});
+						p[p.size() - 1].ownerID = nPlayerID;
+						p[p.size() - 1].pos = object.pos;
+						p[p.size() - 1].vel = { 0.f,0.f };
+						p[p.size() - 1].fRad = 1.f;
+
+						switch (currDir) {
+						case Direction::N:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ 0.f,-.002f };
+						}
+						break;
+						case Direction::NE:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ .00177f,-.00177f };
+						}
+						break;
+						case Direction::E:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ .002f,0.f };
+						}
+						break;
+						case Direction::SE:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ .00177f,.00177f };
+						}
+						break;
+						case Direction::S:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ 0.f,.002f };
+						}
+						break;
+						case Direction::SW:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ -.00177f,.00177f };
+						}
+						break;
+						case Direction::W:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ -0.002f,0.f };
+						}
+						break;
+						case Direction::NW:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ -.00177f,-.00177f };
+						}
+						break;
+						default:
+						{
+						}
+						break;
+						}
+
+						cnet::message<GameMsg> msgAddBullet;
+						msgAddBullet.header.id = GameMsg::Game_AddBullet;
+						BulletDescription bd{};
+						bd.fRad = p[p.size() - 1].fRad;
+						bd.nUniqueID = p[p.size() - 1].ownerID;
+						bd.pos = p[p.size() - 1].pos;
+						bd.vel = p[p.size() - 1].vel;
+						bd.index = (uint32_t)(p.size() - 1);
+						msgAddBullet << bd;
+						Send(msgAddBullet);
+
+					}
 				}
-
-				
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space))
-				{
-					auto& p = projectiles[nPlayerID];
-					p.emplace_back(WorldObject{});
-					p[p.size() - 1].ownerID = nPlayerID;
-					p[p.size() - 1].pos = object.pos;
-					p[p.size() - 1].vel = { 0.f,0.f };
-					p[p.size() - 1].fRad = 1.f;
-
-					switch (currDir) {
-					case Direction::N:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ 0.f,-.002f };
-					}
-					break;
-					case Direction::NE:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ .00177f,-.00177f };
-					}
-					break;
-					case Direction::E:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ .002f,0.f };
-					}
-					break;
-					case Direction::SE:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ .00177f,.00177f };
-					}
-					break;
-					case Direction::S:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ 0.f,.002f };
-					}
-					break;
-					case Direction::SW:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ -.00177f,.00177f };
-					}
-					break;
-					case Direction::W:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ -0.002f,0.f };
-					}
-					break;
-					case Direction::NW:
-					{
-						p[p.size() - 1].vel = sf::Vector2f{ -.00177f,-.00177f };
-					}
-					break;
-					default:
-					{
-					}
-					break;
-					}
-				}
-
 
 				if (object.vel.lengthSquared() > 0)
 				{
