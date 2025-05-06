@@ -258,7 +258,7 @@ public:
 			return true;
 		}
 
-		mapObjects.emplace(std::pair<uint32_t,sPlayerDescription> { 0,sPlayerDescription{} });
+		mapObjects.emplace(std::pair<uint32_t, sPlayerDescription> { 0, sPlayerDescription{} });
 
 		
 		
@@ -658,6 +658,7 @@ public:
 						bd.vel = p[p.size() - 1].vel;
 						bd.index = (uint32_t)(p.size() - 1);
 						msgAddBullet << bd;
+						
 						Send(msgAddBullet);
 
 					}
@@ -747,6 +748,7 @@ public:
 				{
 					for (auto& bullet : playerBullets.second)
 					{
+						float dt = mapObjects[bullet.ownerID].dt;
 
 						sf::Vector2f bulletPoss = bullet.pos + (bullet.vel * dt);
 
@@ -1079,7 +1081,7 @@ public:
 				msg.header.id = GameMsg::Game_UpdatePlayer;
 				mapObjects[nPlayerID].vPos = object.pos;
 				mapObjects[nPlayerID].vVel = object.vel;
-
+				mapObjects[nPlayerID].dt = dt;
 				msg << mapObjects[nPlayerID];
 				Send(msg);
 			}

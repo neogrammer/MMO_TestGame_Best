@@ -44,6 +44,7 @@ struct sPlayerDescription
 	AnimDir dir = AnimDir::S;
 	uint32_t currFrame = 0;
 	
+	float dt = { 0.f };
 
 };
 
@@ -56,4 +57,6 @@ struct BulletDescription
 	sf::Vector2f vel = { 0.f,0.f };
 
 	uint32_t index = 0;
+
+
 };
