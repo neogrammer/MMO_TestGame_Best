@@ -24,7 +24,13 @@ enum class AnimDir
 	N,NE,E,SE,S,SW,W,NW
 };
 
+struct TimeSync
+{
+	std::chrono::system_clock::time_point timeBegin{};
+	std::chrono::system_clock::time_point timeReachingServer{};
+	std::chrono::system_clock::time_point timeFromServer{};
 
+};
 
 struct sPlayerDescription
 {
@@ -45,6 +51,18 @@ struct sPlayerDescription
 	uint32_t currFrame = 0;
 	
 	float dt = { 0.f };
+
+
+	// when creating a player ping the server, the server gets the ping, calculates the time at the server, updates the message and sends it back where client calcs time once more anduses those threee times to store time to server, and from server time displacements
+	//  with this equipped, during player updates, they send their own local dt to the server plus the time to server time, and the server sends this out to each client respectively,
+	//  when the other client gets it from the server, they use their from server time and add it to the latency for a total dt, which is used on that client for each client on that frame providing accurate dts, regardless of whether the time is off on any machine whatsoever
+	//  im a genius
+	
+	// send time
+	// to server time
+	// receive time
+	// to destination timr
+
 
 };
 

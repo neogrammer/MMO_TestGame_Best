@@ -239,8 +239,25 @@ private:
 	sPlayerDescription descPlayer;
 	const char* sAppName;
 	bool bWaitingForConnection = true;
+	long long diffClientToServer=0L;
+	long long diffServerToClient=0L;
 
 public:
+	void ServerSync()
+	{
+		cnet::message<GameMsg> msg;
+		msg.header.id = GameMsg::Server_GetPing;
+
+		TimeSync timeSync;
+		timeSync.timeBegin = std::chrono::system_clock::now();
+
+		msg << timeSync;
+
+		Send(msg);
+		
+	}
+
+
 	bool Init()
 	{
 		
@@ -252,17 +269,11 @@ public:
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
 
 		tv.create( sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed , settings);
-		if (Connect("192.168.0.6", 60000))
+		if (Connect("127.0.0.1", 60000))
 		{
 			object.pos = { 3.f,3.f };
 			return true;
 		}
-
-		mapObjects.emplace(std::pair<uint32_t, sPlayerDescription> { 0, sPlayerDescription{} });
-
-		
-		
-
 
 		return false;
 	}
@@ -285,6 +296,17 @@ public:
 
 					switch (msg.header.id)
 					{
+					case GameMsg::Server_GetPing:
+					{
+						TimeSync ts;
+						msg >> ts;
+
+						std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+						diffClientToServer = ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count();
+						diffServerToClient = timeNow.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count();
+
+					}
+					break;
 					case(GameMsg::Client_Accepted):
 					{
 						std::cout << "Server accepted client - you're in!\n";
@@ -308,6 +330,11 @@ public:
 
 						projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
 						projectiles[nPlayerID].clear();
+
+						/*cnet::message<GameMsg> msg;
+						msg.header.id = GameMsg::Server_GetPing;*/
+
+						ServerSync();
 
 
 						break;
@@ -341,6 +368,7 @@ public:
 					{
 						sPlayerDescription desc;
 						msg >> desc;
+						desc.dt += diffServerToClient;
 						mapObjects.insert_or_assign(desc.nUniqueID, desc);
 						break;
 					}
@@ -1076,12 +1104,14 @@ public:
 
 				tv.display();
 
+
+
 				// Send player description
 				cnet::message<GameMsg> msg;
 				msg.header.id = GameMsg::Game_UpdatePlayer;
 				mapObjects[nPlayerID].vPos = object.pos;
 				mapObjects[nPlayerID].vVel = object.vel;
-				mapObjects[nPlayerID].dt = dt;
+				mapObjects[nPlayerID].dt = dt + diffClientToServer;
 				msg << mapObjects[nPlayerID];
 				Send(msg);
 			}

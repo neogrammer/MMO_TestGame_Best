@@ -201,6 +201,8 @@ protected:
 					cnet::message<GameMsg> msgUpdatePlayer;
 					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
 					msgUpdatePlayer << desc;*/
+
+
 			MessageAllClients(msg, client);
 
 			//		}
@@ -210,6 +212,23 @@ protected:
 			break;
 		}
 
+		case GameMsg::Server_GetPing:
+		{
+			TimeSync ts;
+			msg >> ts;
+
+			ts.timeReachingServer = std::chrono::system_clock::now();
+
+			cnet::message<GameMsg> newMsg;
+			newMsg.header.id = GameMsg::Server_GetPing;
+
+			newMsg << ts;
+
+			MessageClient(client, newMsg);
+
+
+		}
+		break;
 		}
 
 	}
