@@ -120,6 +120,8 @@ protected:
 					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
 					msgUpdatePlayer << desc;*/
 			MessageAllClients(msg, client);
+
+			
 		
 			//		}
 				//}
@@ -220,11 +222,26 @@ protected:
 			ts.timeReachingServer = std::chrono::system_clock::now();
 
 			cnet::message<GameMsg> newMsg;
-			newMsg.header.id = GameMsg::Server_GetPing;
+			newMsg.header.id = GameMsg::Server_GetOwnTime;
 
 			newMsg << ts;
 
 			MessageClient(client, newMsg);
+
+			for (auto& player : m_mapPlayerRoster)
+			{
+				TimePlayer tp{};
+				tp.ts = ts;
+				auto pID = player.first;
+				tp.id = pID;
+				
+				cnet::message<GameMsg> outMsg;
+
+				outMsg.header.id = GameMsg::Server_GetPing;
+				outMsg << tp;
+				
+				MessageAllClients(newMsg, client);
+			}
 
 
 		}

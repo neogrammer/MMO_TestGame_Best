@@ -5,6 +5,7 @@ enum class GameMsg : uint32_t
 {
 	Server_GetStatus,
 	Server_GetPing,
+	Server_GetOwnTime,
 
 	Client_Accepted,
 	Client_AssignID,
@@ -29,6 +30,14 @@ struct TimeSync
 	std::chrono::system_clock::time_point timeBegin{};
 	std::chrono::system_clock::time_point timeReachingServer{};
 	std::chrono::system_clock::time_point timeFromServer{};
+
+};
+
+
+struct TimePlayer
+{
+	TimeSync ts;
+	uint32_t id;
 
 };
 

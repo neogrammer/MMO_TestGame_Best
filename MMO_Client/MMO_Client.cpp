@@ -239,8 +239,8 @@ private:
 	sPlayerDescription descPlayer;
 	const char* sAppName;
 	bool bWaitingForConnection = true;
-	long long diffClientToServer=0L;
-	long long diffServerToClient=0L;
+	std::map<uint32_t, long long> diffClientToServer{};
+	std::map<uint32_t, long long> diffServerToClient{};
 
 public:
 	void ServerSync()
@@ -269,7 +269,7 @@ public:
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
 
 		tv.create( sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed , settings);
-		if (Connect("127.0.0.1", 60000))
+		if (Connect("192.168.0.6", 60000))
 		{
 			object.pos = { 3.f,3.f };
 			return true;
@@ -280,7 +280,7 @@ public:
 
 	bool run()
 	{
-		float dt = 0.f;
+		std::map<uint32_t, float> dts{};
 		sf::Clock timer{};
 		// Check for incoming network messages
 		if (IsConnected())
@@ -298,12 +298,12 @@ public:
 					{
 					case GameMsg::Server_GetPing:
 					{
-						TimeSync ts;
-						msg >> ts;
+						TimePlayer tp;
+						msg >> tp;
 
 						std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-						diffClientToServer = ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count();
-						diffServerToClient = timeNow.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count();
+						diffClientToServer.insert_or_assign(tp.id, tp.ts.timeReachingServer.time_since_epoch().count() - tp.ts.timeBegin.time_since_epoch().count());
+						diffServerToClient.insert_or_assign(tp.id, timeNow.time_since_epoch().count() - tp.ts.timeReachingServer.time_since_epoch().count());
 
 					}
 					break;
@@ -340,6 +340,18 @@ public:
 						break;
 					}
 
+					case GameMsg::Server_GetOwnTime:
+					{
+
+						TimeSync ts;
+						msg >> ts;
+
+						std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+						diffClientToServer.insert_or_assign(nPlayerID, ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count());
+						diffServerToClient.insert_or_assign(nPlayerID, timeNow.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count());
+
+					}
+					break;
 					case(GameMsg::Game_AddPlayer):
 					{
 						sPlayerDescription desc;
@@ -347,6 +359,7 @@ public:
 						mapObjects.insert_or_assign(desc.nUniqueID, desc);
 						projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
 						projectiles[desc.nUniqueID].clear();
+						dts.insert_or_assign(desc.nUniqueID, desc.dt);
 						if (desc.nUniqueID == nPlayerID)
 						{
 							// Now we exist in game world
@@ -368,7 +381,7 @@ public:
 					{
 						sPlayerDescription desc;
 						msg >> desc;
-						desc.dt += diffServerToClient;
+						dts.insert_or_assign(desc.nUniqueID, desc.dt);
 						mapObjects.insert_or_assign(desc.nUniqueID, desc);
 						break;
 					}
@@ -425,36 +438,6 @@ public:
 						break;
 					}
 
-					case(GameMsg::Game_AddPlayer):
-					{
-						sPlayerDescription desc;
-						msg >> desc;
-						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-
-						if (desc.nUniqueID == nPlayerID)
-						{
-							// Now we exist in game world
-							bWaitingForConnection = false;
-						}
-						break;
-					}
-
-					case(GameMsg::Game_RemovePlayer):
-					{
-						uint32_t nRemovalID = 0;
-						msg >> nRemovalID;
-						mapObjects.erase(nRemovalID);
-						break;
-					}
-
-					case(GameMsg::Game_UpdatePlayer):
-					{
-						sPlayerDescription desc;
-						msg >> desc;
-						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-						break;
-					}
-
 					case(GameMsg::Game_AddBullet):
 					{
 						BulletDescription desc;
@@ -483,17 +466,61 @@ public:
 
 					case(GameMsg::Game_UpdateBullet):
 					{
-						
+
 						break;
 					}
 
 
+
+
+					case(GameMsg::Game_AddPlayer):
+					{
+						sPlayerDescription desc;
+						msg >> desc;
+						mapObjects.insert_or_assign(desc.nUniqueID, desc);
+						projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
+						projectiles[desc.nUniqueID].clear();
+						dts.insert_or_assign(desc.nUniqueID, desc.dt);
+						if (desc.nUniqueID == nPlayerID)
+						{
+							// Now we exist in game world
+							bWaitingForConnection = false;
+						}
+						break;
+					}
+
+					case(GameMsg::Game_RemovePlayer):
+					{
+						uint32_t nRemovalID = 0;
+						msg >> nRemovalID;
+						mapObjects.erase(nRemovalID);
+						projectiles.erase(nRemovalID);
+						break;
+					}
+
+					case(GameMsg::Game_UpdatePlayer):
+					{
+						sPlayerDescription desc;
+						msg >> desc;
+						dts.insert_or_assign(desc.nUniqueID, desc.dt);
+						mapObjects.insert_or_assign(desc.nUniqueID, desc);
+						break;
+					}
 					}
 				}
 
 
+				// Server Sync here??
+				ServerSync();
 
-				dt = timer.getElapsedTime().asSeconds();
+				float dtThis = timer.getElapsedTime().asSeconds();
+				dts[nPlayerID] = dtThis + diffClientToServer[nPlayerID] + diffServerToClient[nPlayerID];
+				for (auto& player : mapObjects)
+				{
+					if (player.first == nPlayerID) continue;
+					dts[player.first] = mapObjects[player.first].dt + diffClientToServer[player.first] + diffServerToClient[player.first];
+				}
+
 				while (const std::optional event = tv.pollEvent())
 				{
 					if (event->is<sf::Event::Closed>())
@@ -532,7 +559,7 @@ public:
 							{
 								// scrolled up, zoom un
 								auto vw = tv.getView();
-								vw.zoom(1.f - 0.02f * dt);
+								vw.zoom(1.f - 0.02f * dts[nPlayerID]);
 
 								//zoomFactor *= (1.f - 0.2f * dt);
 								tv.setView(vw);
@@ -544,7 +571,7 @@ public:
 							{
 								// scrolled down, zoom out
 								auto vw = tv.getView();
-								vw.zoom(1.f + 0.02f * dt);
+								vw.zoom(1.f + 0.02f * dts[nPlayerID]);
 
 
 								tv.setView(vw);
@@ -697,86 +724,100 @@ public:
 					object.vel = object.vel.normalized() * 0.001f;
 				}
 
-				sf::Vector2f vPotentialPosition = object.pos + (object.vel * dt);
+				auto& obj = object;
 
-				/*	if (mapObjects[nPlayerID].vVel.length() > 0)
-					{
-						if (mapObjects[nPlayerID].vVel.x > 3.f)
-						{
-							mapObjects[nPlayerID].vVel.x = 3.f;
-						}
-						else if (mapObjects[nPlayerID].vVel.x < -3.f)
-						{
-							mapObjects[nPlayerID].vVel.x = -3.f;
-						}
-						else if (mapObjects[nPlayerID].vVel.y > 3.f)
-						{
-							mapObjects[nPlayerID].vVel.y = 3.f;
-						}
-						else if (mapObjects[nPlayerID].vVel.y < -3.f)
-						{
-							mapObjects[nPlayerID].vVel.y = -3.f;
-						}
-
-					}*/
-
-				sf::Vector2i vCurrentCell = { (int)(floorf(object.pos.x)), (int)(floorf(object.pos.y)) };
-				sf::Vector2i vTargetCell = sf::Vector2i({ (int)vPotentialPosition.x, (int)vPotentialPosition.y });
-				int vAreaTop = maximum(((int)(minimum(vCurrentCell.y, vTargetCell.y) - 1)), (int)0);
-				int vAreaLeft = maximum(((int)(minimum(vCurrentCell.x, vTargetCell.x) - 1)), (int)0);
-				int vAreaBttm = minimum((maximum(vCurrentCell.y, vTargetCell.y) + 3), (vWorldSize.y - 1));
-				int vAreaRight = minimum((maximum(vCurrentCell.x, vTargetCell.x) + 3), (vWorldSize.x - 1));
-
-
-				//	// Iterate through each cell in test area
-				sf::Vector2i vCell;
-				for (vCell.y = vAreaTop; vCell.y <= vAreaBttm; vCell.y++)
+				for (auto& object : mapObjects)
 				{
-					for (vCell.x = vAreaLeft; vCell.x <= vAreaRight; vCell.x++)
-					{
-						// Check if the cell is actually solid...
-					//	sf::Vector2f vCellMiddle = vCell.floor();
-						if (sWorldMap[vCell.y * vWorldSize.x + vCell.x] == '#')
+
+					sf::Vector2f vPotentialPosition = object.second.vPos + (object.second.vVel * dts[object.first]);
+
+					/*	if (mapObjects[nPlayerID].vVel.length() > 0)
 						{
-							// ...it is! So work out nearest point to future player position, around perimeter
-							// of cell rectangle. We can test the distance to this point to see if we have
-							// collided.
-
-							sf::Vector2f vNearestPoint;
-							//				// Inspired by this (very clever btw) 
-							//				// https://stackoverflow.com/questions/45370692/circle-rectangle-collision-response
-							vNearestPoint.x = (float)std::max(float(vCell.x), std::min((vPotentialPosition.x), float(vCell.x + 1)));
-							vNearestPoint.y = (float)std::max(float(vCell.y), std::min((vPotentialPosition.y), float(vCell.y + 1)));
-
-							//				// But modified to work :P
-							sf::Vector2f vRayToNearest = { vNearestPoint.x - (vPotentialPosition.x), vNearestPoint.y - (vPotentialPosition.y) };
-
-							float fOverlap = (object.fRad - vRayToNearest.length());
-							if (std::isnan(fOverlap)) fOverlap = 0;// Thanks Dandistine!
-
-							//				// If overlap is positive, then a collision has occurred, so we displace backwards by the 
-							//				// overlap amount. The potential position is then tested against other tiles in the area
-							//				// therefore "statically" resolving the collision
-							if (fOverlap > 0)
+							if (mapObjects[nPlayerID].vVel.x > 3.f)
 							{
-								//					// Statically resolve the collision
-								//			
-								sf::Vector2f tmp = (vRayToNearest == sf::Vector2f{ 0.f, 0.f }) ? sf::Vector2f{ 0.f, 0.f } : vRayToNearest.normalized();
-								vPotentialPosition = vPotentialPosition - (tmp * fOverlap);
+								mapObjects[nPlayerID].vVel.x = 3.f;
+							}
+							else if (mapObjects[nPlayerID].vVel.x < -3.f)
+							{
+								mapObjects[nPlayerID].vVel.x = -3.f;
+							}
+							else if (mapObjects[nPlayerID].vVel.y > 3.f)
+							{
+								mapObjects[nPlayerID].vVel.y = 3.f;
+							}
+							else if (mapObjects[nPlayerID].vVel.y < -3.f)
+							{
+								mapObjects[nPlayerID].vVel.y = -3.f;
+							}
+
+						}*/
+
+					sf::Vector2i vCurrentCell = { (int)(floorf(object.second.vPos.x)), (int)(floorf(object.second.vPos.y)) };
+					sf::Vector2i vTargetCell = sf::Vector2i({ (int)vPotentialPosition.x, (int)vPotentialPosition.y });
+					int vAreaTop = maximum(((int)(minimum(vCurrentCell.y, vTargetCell.y) - 1)), (int)0);
+					int vAreaLeft = maximum(((int)(minimum(vCurrentCell.x, vTargetCell.x) - 1)), (int)0);
+					int vAreaBttm = minimum((maximum(vCurrentCell.y, vTargetCell.y) + 3), (vWorldSize.y - 1));
+					int vAreaRight = minimum((maximum(vCurrentCell.x, vTargetCell.x) + 3), (vWorldSize.x - 1));
+
+
+					//	// Iterate through each cell in test area
+					sf::Vector2i vCell;
+					for (vCell.y = vAreaTop; vCell.y <= vAreaBttm; vCell.y++)
+					{
+						for (vCell.x = vAreaLeft; vCell.x <= vAreaRight; vCell.x++)
+						{
+							// Check if the cell is actually solid...
+						//	sf::Vector2f vCellMiddle = vCell.floor();
+							if (sWorldMap[vCell.y * vWorldSize.x + vCell.x] == '#')
+							{
+								// ...it is! So work out nearest point to future player position, around perimeter
+								// of cell rectangle. We can test the distance to this point to see if we have
+								// collided.
+
+								sf::Vector2f vNearestPoint;
+								//				// Inspired by this (very clever btw) 
+								//				// https://stackoverflow.com/questions/45370692/circle-rectangle-collision-response
+								vNearestPoint.x = (float)std::max(float(vCell.x), std::min((vPotentialPosition.x), float(vCell.x + 1)));
+								vNearestPoint.y = (float)std::max(float(vCell.y), std::min((vPotentialPosition.y), float(vCell.y + 1)));
+
+								//				// But modified to work :P
+								sf::Vector2f vRayToNearest = { vNearestPoint.x - (vPotentialPosition.x), vNearestPoint.y - (vPotentialPosition.y) };
+
+								float fOverlap = (object.second.fRadius - vRayToNearest.length());
+								if (std::isnan(fOverlap)) fOverlap = 0;// Thanks Dandistine!
+
+								//				// If overlap is positive, then a collision has occurred, so we displace backwards by the 
+								//				// overlap amount. The potential position is then tested against other tiles in the area
+								//				// therefore "statically" resolving the collision
+								if (fOverlap > 0)
+								{
+									//					// Statically resolve the collision
+									//			
+									sf::Vector2f tmp = (vRayToNearest == sf::Vector2f{ 0.f, 0.f }) ? sf::Vector2f{ 0.f, 0.f } : vRayToNearest.normalized();
+									vPotentialPosition = vPotentialPosition - (tmp * fOverlap);
+								}
 							}
 						}
 					}
+
+					object.second.vPos = vPotentialPosition;
+					if (object.first == nPlayerID)
+					{
+						obj.pos = object.second.vPos;
+					}
 				}
 
-				object.pos = vPotentialPosition;
-
+				int vAreaTopThis{};
+				int vAreaLeftThis{};
+				int vAreaBttmThis{};
+				int vAreaRightThis{};
 
 				// now update the bullets locally and check for collision, then send this players updated bullets to the server in a loop which will update all the players with all those bullets, and the other players will do the same
 				for (auto& playerBullets : projectiles)
 				{
 					for (auto& bullet : playerBullets.second)
 					{
-						float dt = mapObjects[bullet.ownerID].dt;
+						float dt = dts[bullet.ownerID];
 
 						sf::Vector2f bulletPoss = bullet.pos + (bullet.vel * dt);
 
@@ -787,6 +828,14 @@ public:
 						int vAreaBttm = minimum((maximum(vCurrentCell.y, vTargetCell.y) + 3), (vWorldSize.y - 1));
 						int vAreaRight = minimum((maximum(vCurrentCell.x, vTargetCell.x) + 3), (vWorldSize.x - 1));
 
+						if (playerBullets.first == nPlayerID)
+						{
+							vAreaTopThis = vAreaTop;
+							vAreaLeftThis = vAreaLeft;
+							vAreaRightThis = vAreaRight;
+							vAreaBttmThis = vAreaBttm;
+
+						}
 
 						//	// Iterate through each cell in test area
 						sf::Vector2i vCell;
@@ -811,7 +860,7 @@ public:
 									//				// But modified to work :P
 									sf::Vector2f vRayToNearest = { vNearestPoint.x - (bulletPoss.x), vNearestPoint.y - (bulletPoss.y) };
 
-									float fOverlap = (object.fRad - vRayToNearest.length());
+									float fOverlap = (mapObjects[playerBullets.first].fRadius - vRayToNearest.length());
 									if (std::isnan(fOverlap)) fOverlap = 0;// Thanks Dandistine!
 
 									//				// If overlap is positive, then a collision has occurred, so we displace backwards by the 
@@ -944,7 +993,7 @@ public:
 					}
 					else if (leftMouseButtonHeld)
 					{
-						updatePan(tv, sf::Mouse::getPosition(tv), dt);
+						updatePan(tv, sf::Mouse::getPosition(tv), dts[nPlayerID]);
 					}
 					else if (leftMouseButtonReleased)
 					{
@@ -1067,8 +1116,8 @@ public:
 				nameText.setString("ID " + std::to_string(nPlayerID));
 
 
-				sf::RectangleShape bounds{ { float((vAreaRight - vAreaLeft) * tileSize), float((vAreaBttm - vAreaTop) * tileSize) } };
-				bounds.setPosition({float(vAreaLeft * tileSize),float(vAreaTop * tileSize)});
+				sf::RectangleShape bounds{ { float((vAreaRightThis - vAreaLeftThis) * tileSize), float((vAreaBttmThis - vAreaTopThis) * tileSize) } };
+				bounds.setPosition({float(vAreaLeftThis * tileSize),float(vAreaTopThis * tileSize)});
 				bounds.setFillColor(sf::Color(47, 147, 247, 53));
 				tv.draw(bounds);
 
@@ -1111,7 +1160,7 @@ public:
 				msg.header.id = GameMsg::Game_UpdatePlayer;
 				mapObjects[nPlayerID].vPos = object.pos;
 				mapObjects[nPlayerID].vVel = object.vel;
-				mapObjects[nPlayerID].dt = dt + diffClientToServer;
+				mapObjects[nPlayerID].dt = dtThis;
 				msg << mapObjects[nPlayerID];
 				Send(msg);
 			}
