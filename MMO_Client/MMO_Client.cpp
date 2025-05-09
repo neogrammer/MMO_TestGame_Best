@@ -862,6 +862,7 @@ public:
 
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space))
 					{
+						const float BSPD{ 20.f };
 						auto& p = projectiles[nPlayerID];
 						p.emplace_back(WorldObject{});
 						p[p.size() - 1].ownerID = nPlayerID;
@@ -872,42 +873,42 @@ public:
 						switch (currDir) {
 						case Direction::N:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ 0.f,-.002f };
+							p[p.size() - 1].vel = sf::Vector2f{ 0.f,-1.f*BSPD };
 						}
 						break;
 						case Direction::NE:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ .00177f,-.00177f };
+							p[p.size() - 1].vel = sf::Vector2f{ .7071f * BSPD,-.7071f * BSPD };
 						}
 						break;
 						case Direction::E:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ .002f,0.f };
+							p[p.size() - 1].vel = sf::Vector2f{ 1.f * BSPD,0.f };
 						}
 						break;
 						case Direction::SE:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ .00177f,.00177f };
+							p[p.size() - 1].vel = sf::Vector2f{ .7071f * BSPD,.7071f * BSPD };
 						}
 						break;
 						case Direction::S:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ 0.f,.002f };
+							p[p.size() - 1].vel = sf::Vector2f{ 0.f,1.f * BSPD };
 						}
 						break;
 						case Direction::SW:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ -.00177f,.00177f };
+							p[p.size() - 1].vel = sf::Vector2f{ -.7071f * BSPD,.7071f * BSPD };
 						}
 						break;
 						case Direction::W:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ -0.002f,0.f };
+							p[p.size() - 1].vel = sf::Vector2f{ -1.f * BSPD,0.f };
 						}
 						break;
 						case Direction::NW:
 						{
-							p[p.size() - 1].vel = sf::Vector2f{ -.00177f,-.00177f };
+							p[p.size() - 1].vel = sf::Vector2f{ -.7071f * BSPD,-.7071f * BSPD };
 						}
 						break;
 						default:
@@ -1097,7 +1098,7 @@ public:
 				{
 					for (auto& bullet : playerBullets.second)
 					{
-						float dt = dts[bullet.ownerID];
+						float dt = dtThis;//dts[bullet.ownerID];
 
 						sf::Vector2f bulletPoss = bullet.pos + (bullet.vel * dt);
 
