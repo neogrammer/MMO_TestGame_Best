@@ -14,6 +14,7 @@ class MMOGame : cnet::client_interface<GameMsg>
 	sf::Vector2i panStart = { 0,0 };
 	sf::Font fnt{ "assets/font1.ttf" };
 	sf::Texture playerTex{ "assets/textures/players/playerSheet.png" };
+	const float BASE_SPEED = 2.f; // 120 pixels per second at normal zoom (1.f)
 	sf::Vector2f zoomFactor{ 1.f,1.f };
 	int tileSize{ 64 };
 	bool hasDropped{ true };
@@ -40,11 +41,21 @@ class MMOGame : cnet::client_interface<GameMsg>
 		if (hasDropped)
 		{
 			tv.setMouseCursorVisible(false);
-			sf::Mouse::setPosition({ (sf::Vector2i)(sf::Vector2f{(float)tv.getSize().x / 2.f, (float)tv.getSize().y / 2.f}) }, tv);
-			panStart = sf::Mouse::getPosition(tv);
+			//tv.setMouseCursorGrabbed(true);
+			sf::Mouse::setPosition({ (sf::Vector2i)(sf::Vector2f{(float)tv.getSize().x / 2.f, (float)tv.getSize().y / 2.f}) }, wnd_);
+			
 
 			initialLoc = startPos_;
+			panStart = (sf::Vector2i)(sf::Vector2f{ (float)tv.getSize().x / 2.f, (float)tv.getSize().y / 2.f });
 			hasDropped = false;
+			isPanning = true;
+		}
+		else
+		{
+			// set mouse to invisible and store the location
+			tv.setMouseCursorVisible(false);
+			initialLoc = startPos_;
+
 		}
 	}
 
@@ -54,13 +65,21 @@ class MMOGame : cnet::client_interface<GameMsg>
 		float dispY = 0.f;
 		//panStart = tv.getView().getCenter();
 		
-		if (mousePos_.x > panStart.x)
+		sf::Vector2f mpos = (sf::Vector2f)sf::Mouse::getPosition(wnd_);
+		auto disp = (sf::Vector2f)panStart - mpos;
+		if (disp != sf::Vector2f{ 0.f,0.f })
 		{
-			dispX = -0.777f;
+			disp = {disp.normalized().x * 1600.f, disp.normalized().y * 900.f};
+		}
+
+
+	/*	if (mousePos_.x > panStart.x)
+		{
+			dispX = -1600.f;
 		}
 		else if (mousePos_.x < panStart.x)
 		{
-			dispX = 0.777f;
+			dispX = 1600.f;
 		}
 		else
 		{
@@ -69,34 +88,46 @@ class MMOGame : cnet::client_interface<GameMsg>
 
 		if (mousePos_.y > panStart.y)
 		{
-			dispY = -0.777f;
+			dispY = -900.f;
 		}
 		else if (mousePos_.y < panStart.y)
 		{
-			dispY = 0.777f;
+			dispY = 900.f;
 		}
 		else
 		{
 			dispY = 0.f;
-		}
+		}*/
 		sf::View vw = wnd_.getView();
-		vw.move({ dispX * dt_, dispY * dt_ });
-	
+		vw.move({disp.x * dt_, disp.y * dt_});
+		
 		//panStart = mousePos_;
 		wnd_.setView(vw);
+
+		sf::Mouse::setPosition(panStart, wnd_);
+	
 		
 
 
-		sf::Mouse::setPosition(tv.mapCoordsToPixel({(float)tv.getView().getCenter().x, (float)tv.getView().getCenter().y }), tv);
-		panStart = sf::Mouse::getPosition(tv);
+		//sf::Mouse::setPosition(tv.mapCoordsToPixel({(float)tv.getView().getCenter().x, (float)tv.getView().getCenter().y }), tv);
+		//panStart = sf::Mouse::getPosition(tv);
+		isPanning = true;
 	}
 
 	void dropPan(sf::RenderWindow& wnd_, sf::Vector2i mousePos_)
 	{
-
-		sf::Mouse::setPosition(initialLoc, tv);
+		//tv.setMouseCursorGrabbed(false);
+		//if (hasDropped == false)
+		//{
+		if (hasDropped == false)
+			sf::Mouse::setPosition(initialLoc, tv);
 		tv.setMouseCursorVisible(true);
 		hasDropped = true;
+		//}
+		//else
+		//{
+	//		tv.setMouseCursorVisible(true);
+		//}
 	}
 
 	
@@ -240,7 +271,7 @@ private:
 	std::map<uint32_t, long long> diffClientToServer{};
 	std::map<uint32_t, long long> diffServerToClient{};
 
-
+	bool isPanning{ false };
 public:
 	void ServerSync()
 	{
@@ -277,13 +308,137 @@ public:
 		return false;
 	}
 
+	bool handleNewClientMessages(std::map<uint32_t, float>& dts)
+	{
+		bool stillWaiting = true;
+
+		while (stillWaiting)
+		{
+
+
+			while (!Incoming().empty())
+			{
+				auto msg = Incoming().pop_front().msg;
+
+				switch (msg.header.id)
+				{
+				case GameMsg::Server_GetPing:
+				{
+					TimePlayer tp;
+					msg >> tp;
+
+					std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+					diffClientToServer.insert_or_assign(tp.id, tp.ts.timeReachingServer.time_since_epoch().count() - tp.ts.timeBegin.time_since_epoch().count());
+					diffServerToClient.insert_or_assign(tp.id, timeNow.time_since_epoch().count() - tp.ts.timeReachingServer.time_since_epoch().count());
+
+				}
+				break;
+				case(GameMsg::Client_Accepted):
+				{
+					std::cout << "Server accepted client - you're in!\n";
+					cnet::message<GameMsg> msg;
+					msg.header.id = GameMsg::Client_RegisterWithServer;
+					descPlayer.vPos = { 3.0f,3.0f };
+					msg << descPlayer;
+					Send(msg);
+					break;
+				}
+
+				case(GameMsg::Client_AssignID):
+				{
+					// Server is assigning us OUR id
+					msg >> nPlayerID;
+					std::cout << "Assigned Client ID = " << nPlayerID << "\n";
+					mapObjects[nPlayerID] = sPlayerDescription{};
+					mapObjects[nPlayerID].nUniqueID = nPlayerID;
+					mapObjects[nPlayerID].fRadius = 32.f;
+					mapObjects[nPlayerID].vPos = { 3.0f,3.0f };
+
+					// CRUCIAL STEP: update the WorldObject's ownerID here
+					object.ownerID = nPlayerID;
+
+
+					projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
+					projectiles[nPlayerID].clear();
+
+					/*cnet::message<GameMsg> msg;
+					msg.header.id = GameMsg::Server_GetPing;*/
+
+					ServerSync();
+
+
+					break;
+				}
+
+				case GameMsg::Server_GetOwnTime:
+				{
+
+					TimeSync ts;
+					msg >> ts;
+					ts.timeFromServer = std::chrono::system_clock::now();
+					diffClientToServer.insert_or_assign(nPlayerID, ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count());
+					diffServerToClient.insert_or_assign(nPlayerID, ts.timeFromServer.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count());
+
+				}
+				break;
+				case(GameMsg::Game_AddPlayer):
+				{
+					sPlayerDescription desc;
+					msg >> desc;
+
+					mapObjects.insert_or_assign(desc.nUniqueID, desc);
+					projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
+					projectiles[desc.nUniqueID].clear();
+					dts.insert_or_assign(desc.nUniqueID, desc.dt);
+
+					// Special handling for your own player:
+					if (desc.nUniqueID == nPlayerID)
+					{
+						object.ownerID = nPlayerID; // Just ensure it's correct again
+						object.pos = desc.vPos;
+						bWaitingForConnection = false;
+					}
+
+					break;
+				}
+
+				}
+			}
+
+
+			if (bWaitingForConnection)
+			{
+				tv.clear(sf::Color(47, 147, 247, 255));
+				std::cout << "\n" << "Waiting To Connect..." << std::endl;
+				stillWaiting = true;
+			}
+			else
+			{
+				stillWaiting = false;
+			}
+
+
+		}
+
+		return false;
+
+	}
+
+	void handleCoreLoopMessages()
+	{
+
+	}
+
 	bool run()
 	{
+
+		HWND tvhandle{};
 		std::map<uint32_t, float> dts{};
 		sf::Clock timer{};
 		// Check for incoming network messages
 		if (IsConnected())
 		{
+			//while (handleNewClientMessages(dts)) {};
 			static bool stillWaiting = true;
 			while (stillWaiting)
 			{
@@ -369,30 +524,12 @@ public:
 						{
 							object.ownerID = nPlayerID; // Just ensure it's correct again
 							object.pos = desc.vPos;
+							object.pos = sf::Vector2f{ tv.getView().getCenter().x / (float)tileSize, tv.getView().getCenter().y / (float)tileSize};
 							bWaitingForConnection = false;
 						}
 
 						break;
 					}
-
-					case(GameMsg::Game_RemovePlayer):
-					{
-						uint32_t nRemovalID = 0;
-						msg >> nRemovalID;
-						mapObjects.erase(nRemovalID);
-						projectiles.erase(nRemovalID);
-						break;
-					}
-
-					case(GameMsg::Game_UpdatePlayer):
-					{
-						sPlayerDescription desc;
-						msg >> desc;
-						dts.insert_or_assign(desc.nUniqueID, desc.dt);
-						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-						break;
-					}
-
 
 					}
 				}
@@ -411,6 +548,12 @@ public:
 
 		
 			}
+
+			if (tv.isOpen())
+			{
+				tvhandle = (HWND)tv.getNativeHandle();
+			}
+
 			while (tv.isOpen())
 			{
 
@@ -422,34 +565,6 @@ public:
 
 					switch (msg.header.id)
 					{
-					case(GameMsg::Client_Accepted):
-					{
-						std::cout << "Server accepted client - you're in!\n";
-						cnet::message<GameMsg> msg;
-						msg.header.id = GameMsg::Client_RegisterWithServer;
-						descPlayer.vPos = { 3.0f,3.0f };
-						msg << descPlayer;
-						Send(msg);
-						break;
-					}
-
-					case(GameMsg::Client_AssignID):
-					{
-						msg >> nPlayerID;
-						std::cout << "Assigned Client ID = " << nPlayerID << "\n";
-						mapObjects[nPlayerID] = sPlayerDescription{};
-						mapObjects[nPlayerID].nUniqueID = nPlayerID;
-						mapObjects[nPlayerID].fRadius = 32.f;
-						mapObjects[nPlayerID].vPos = { 3.0f,3.0f };
-
-						// CRUCIAL STEP: update the WorldObject's ownerID here
-						object.ownerID = nPlayerID;
-
-
-						projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
-						projectiles[nPlayerID].clear();
-						break;
-					}
 
 					case(GameMsg::Game_AddBullet):
 					{
@@ -531,13 +646,45 @@ public:
 				// Server Sync here??
 				ServerSync();
 
-				float dtThis = timer.getElapsedTime().asSeconds();
+				float dtThis = timer.restart().asSeconds();
 				dts[nPlayerID] = dtThis;
 				for (auto& player : mapObjects)
 				{
 					if (player.first == nPlayerID) continue;
 					dts[player.first] = dtThis;
 				}	
+
+
+				/*if (isFocused)
+				{
+					sf::Vector2i mse = sf::Mouse::getPosition(tv);
+					if (mse.x < 0 || mse.x >= 1600 || mse.y < 0 || mse.y >= 900)
+						isFocused = false;
+
+					
+
+				}
+				else
+				{
+					sf::Vector2i mse = sf::Mouse::getPosition(tv);
+					if (mse.x >= 0 && mse.x < 1600 && mse.y >= 0 && mse.y < 900)
+						isFocused = true;
+				}*/
+
+
+				bool one = tvhandle == GetFocus();
+				bool two = tvhandle == GetForegroundWindow();
+
+				if (one && two)
+				{
+					// our window is on top and in focus
+					isFocused = true;
+				}
+				else
+				{
+					isFocused = false;
+				}
+
 
 				while (const std::optional event = tv.pollEvent())
 				{
@@ -571,29 +718,35 @@ public:
 					}
 					else if (event->is<sf::Event::MouseWheelScrolled>())
 					{
+						static float currZoom{ 1.f };
 						if (isFocused)
 						{
 							if (event->getIf<sf::Event::MouseWheelScrolled>()->delta > 0)
 							{
 								// scrolled up, zoom un
 								auto vw = tv.getView();
-								vw.zoom(1.f - 0.02f * dts[nPlayerID]);
+								currZoom = -10.f * dtThis;
+								vw.zoom(1.f + currZoom);
+								
+
 
 								//zoomFactor *= (1.f - 0.2f * dt);
 								tv.setView(vw);
 
-								zoomFactor = { 1600.f / tv.getView().getSize().x , 900.f / tv.getView().getSize().y };
+								zoomFactor = { 1600.f / tv.getView().getSize().x , 900.f / tv.getView().getSize().y};
 
 							}
 							else if (event->getIf<sf::Event::MouseWheelScrolled>()->delta < 0)
 							{
 								// scrolled down, zoom out
 								auto vw = tv.getView();
-								vw.zoom(1.f + 0.02f * dts[nPlayerID]);
+								currZoom = 10.f * dtThis;
 
+								vw.zoom(1.f + currZoom);
+							
 
 								tv.setView(vw);
-								zoomFactor = { 1600.f / tv.getView().getSize().x , 900.f / tv.getView().getSize().y };
+								zoomFactor = { 1600.f / tv.getView().getSize().x , 900.f / tv.getView().getSize().y};
 
 							}
 							else
@@ -602,65 +755,106 @@ public:
 							}
 						}
 					}
+					/*else if (event->is<sf::Event::MouseEntered>())
+					{
+						if (!isFocused)
+							tv.requestFocus();
+					}*/
 				}
+
+				
+				static bool leftMouseButtonReleased{ false };
+				static bool leftMouseButtonPressed{ false };
+				static bool leftMouseButtonHeld{ false };
 				// Control of Player Object
 				//mapObjects[nPlayerID].vVel = { 0.f,0.f };
+
+				const float speed = BASE_SPEED * (1.f / zoomFactor.x); // assuming uniform zoom, you can use zoomFactor.x
+
 				object.vel = { 0.f,0.f };
+
+				bool isMoving = false;
 
 				if (isFocused)
 				{
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+					if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
 					{
+						isMoving = true;
+
+						//isPanning = false;
 						currDir = Direction::NW;
-						object.vel = { -0.0177f, -0.0177f };
+						object.vel = { -speed * 0.7071f * dtThis, -speed * 0.7071f * dtThis };
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+					else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
 					{
+						//isPanning = false;
+						isMoving = true;
+
 						currDir = Direction::NE;
-						object.vel = { 0.0177f, -0.0177f };
+						object.vel = { speed * 0.7071f * dtThis, -speed * 0.7071f * dtThis };
 
 
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+					else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
 					{
+						//isPanning = false;
+						isMoving = true;
+
 						currDir = Direction::SW;
-						object.vel = { -0.0177f, 0.0177f };
+						object.vel = { -speed * 0.7071f * dtThis, speed * 0.7071f * dtThis };
 
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D))
+					else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D))
 					{
+						//isPanning = false;
+						isMoving = true;
+
 						currDir = Direction::SE;
-						object.vel = { 0.0177f, 0.0177f };
+						object.vel = { speed * 0.7071f * dtThis, speed * 0.7071f * dtThis };
 
 					}
 					//mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
 					else
 					{
 
-						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+						if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
 						{
-							object.vel.y = -0.02f;
+							//isPanning = false;
+							object.vel.y = -speed * dtThis;
+							isMoving = true;
+
 							//mapObjects[nPlayerID].vVel.y = -0.02f;
 							currDir = Direction::N;
 
 
 						}
-						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
-							object.vel.y = 0.02f;
+						else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
+							//isPanning = false;
+							isMoving = true;
+
+							object.vel.y = speed * dtThis;
 							currDir = Direction::S;
 						}// mapObjects[nPlayerID].vVel.y = 0.02f; }
 
 
-						if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
-							object.vel.x = -0.02f;
+						if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+							isMoving = true;
+
+							//isPanning = false;
+							object.vel.x = -speed * dtThis;
 							currDir = Direction::W;
 
 						} //mapObjects[nPlayerID].vVel.x = -0.02f; }
-						else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
-							object.vel.x = 0.02f;
+						else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+
+							isMoving = true;
+
+							//isPanning = false;
+							object.vel.x = speed * dtThis;
 							currDir = Direction::E;
 
-						}//mapObjects[nPlayerID].vVel.x = 0.02f; }
+						}
+
 
 					}
 
@@ -745,16 +939,21 @@ public:
 				{
 					
 
-
+					float deet = dtThis;
 						if (player.first == object.ownerID)
 						{
 							player.second.vPos = object.pos;
-							if (object.vel != sf::Vector2f{ 0.f,0.f })
-								object.vel = object.vel.normalized() * 0.001f;
+							//if (object.vel != sf::Vector2f{ 0.f,0.f })
+							//object.vel = object.vel.normalized() * 0.001f;
 							player.second.vVel = object.vel;
 
 						}
-						sf::Vector2f vPotentialPosition = player.second.vPos + (player.second.vVel * dts[player.first]);
+					
+						
+						
+						sf::Vector2f vPotentialPosition = player.second.vPos + (player.second.vVel * ((player.first == object.ownerID) ? 1 : deet));
+
+						
 
 
 						sf::Vector2i vCurrentCell = { (int)(floorf(player.second.vPos.x)), (int)(floorf(player.second.vPos.y)) };
@@ -812,6 +1011,75 @@ public:
 						{
 							object.pos = player.second.vPos;
 							object.vel = player.second.vVel;
+
+						
+							if (!isPanning)
+							{
+
+
+								auto cent = tv.mapCoordsToPixel(tv.getView().getCenter());
+								auto off = sf::Vector2f{ tv.getSize().x / 4.f, tv.getSize().y / 4.f };
+								float top = cent.y - off.y;
+								float bottom = cent.y + off.y;
+								float left = cent.x - off.x;
+								float right = cent.x + off.x;
+
+								auto pxlCent = tv.mapPixelToCoords(cent);
+
+								auto vw = tv.getView();
+								vw.setCenter({ (object.pos * (float)tileSize) });// /*  - off.x */, vw.getCenter().y
+								tv.setView(vw);
+							}
+
+							//if (object.vel.x > 0.f)
+							//{
+							//	// moving right
+							//	if ((float)tv.mapCoordsToPixel({ object.pos.x * (float)tileSize , tv.getView().getCenter().y }).x > pxlCent.x + off.x)
+							//	{
+							//		auto vw = tv.getView();
+							//		vw.setCenter({ (object.pos.x * (float)tileSize) /*  - off.x */ , vw.getCenter().y});
+							//		tv.setView(vw);
+							//	}
+							//}
+							//else if (object.vel.x < 0.f)
+							//{
+							//	// left
+							//	if ((float)tv.mapCoordsToPixel({ object.pos.x * (float)tileSize , tv.getView().getCenter().y }).x < pxlCent.x - off.x)
+							//	{
+							//		auto vw = tv.getView();
+							//		vw.setCenter({ (object.pos.x * (float)tileSize) /* + off.x */, vw.getCenter().y});
+
+							//		tv.setView(vw);
+
+							//	}
+							//}
+							//if (object.vel.y > 0.f)
+							//{
+							//	// down
+							//	if ((float)tv.mapCoordsToPixel({ tv.getView().getCenter().x, object.pos.y * (float)tileSize }).y > pxlCent.y + off.y)
+							//	{
+							//		auto vw = tv.getView();
+							//		vw.setCenter({ vw.getCenter().x, (object.pos.y * (float)tileSize) }); //- off.y});
+
+							//		tv.setView(vw);
+
+							//	}
+							//}
+							//else if (object.vel.y < 0.f)
+							//{
+							//	// up
+							//	if ((float)tv.mapCoordsToPixel({ tv.getView().getCenter().x, object.pos.y * (float)tileSize }).y < pxlCent.y - off.y)
+							//	{
+							//		auto vw = tv.getView();
+							//		vw.setCenter({ vw.getCenter().x, (object.pos.y * (float)tileSize) });//{ vw.getCenter().x, (object.pos.y * (float)tileSize) + off.y});
+
+							//		tv.setView(vw);
+
+							//		
+							//	}
+
+							//}
+
 						}
 
 					}
@@ -895,79 +1163,10 @@ public:
 					}
 				}
 
-				// Update objects locally
-				//auto& obj = object;
-				//for (auto& object : mapObjects)
-				//{
-				////	// Where will object be worst case?
-				//	sf::Vector2f vPotentialPosition = (object.second.vPos + (object.second.vVel * dt));
-
-				////	// Extract region of world cells that could have collision this frame
-				//	sf::Vector2i vCurrentCell = { (int)(floorf(object.second.vPos.x)), (int)(floorf(object.second.vPos.y))};
-				//	sf::Vector2i vTargetCell = sf::Vector2i({ (int)vPotentialPosition.x, (int)vPotentialPosition.y });
-				//	int vAreaTop = maximum(((int)(minimum(vCurrentCell.y, vTargetCell.y))), (int)0);
-				//	int vAreaLeft = maximum(((int)(minimum(vCurrentCell.x, vTargetCell.x))), (int)0);
-				//	int vAreaBttm = minimum((maximum(vCurrentCell.y, vTargetCell.y) + 1), (vWorldSize.y - 1));
-				//	int vAreaRight = minimum((maximum(vCurrentCell.x, vTargetCell.x) + 1), (vWorldSize.x - 1));
-
-
-				////	// Iterate through each cell in test area
-				//	sf::Vector2i vCell;
-				//	for (vCell.y = vAreaTop; vCell.y <= vAreaBttm; vCell.y++)
-				//	{
-				//		for (vCell.x = vAreaLeft; vCell.x <= vAreaRight; vCell.x++)
-				//		{
-				//			// Check if the cell is actually solid...
-				//		//	sf::Vector2f vCellMiddle = vCell.floor();
-				//			if (sWorldMap[vCell.y * vWorldSize.x + vCell.x] == '#')
-				//			{
-				//				// ...it is! So work out nearest point to future player position, around perimeter
-				//				// of cell rectangle. We can test the distance to this point to see if we have
-				//				// collided.
-
-				//				sf::Vector2f vNearestPoint;
-				////				// Inspired by this (very clever btw) 
-				////				// https://stackoverflow.com/questions/45370692/circle-rectangle-collision-response
-				//				vNearestPoint.x = (float)maximum(int(vCell.x), minimum((int)vPotentialPosition.x, int(vCell.x + 1)));
-				//				vNearestPoint.y = (float)maximum(int(vCell.y), minimum((int)vPotentialPosition.y, int(vCell.y + 1)));
-
-				////				// But modified to work :P
-				//				sf::Vector2f vRayToNearest = { vNearestPoint.x - vPotentialPosition.x, vNearestPoint.y - vPotentialPosition.y };
-				//				vRayToNearest.x += object.second.vVel.x;
-				//				vRayToNearest.y += object.second.vVel.y;
-				//				float mag2 = vRayToNearest.lengthSquared();
-				//				float fOverlap = (object.second.fRadius - mag2);
-				//				if (std::isnan(fOverlap)) fOverlap = 0;// Thanks Dandistine!
-
-				////				// If overlap is positive, then a collision has occurred, so we displace backwards by the 
-				////				// overlap amount. The potential position is then tested against other tiles in the area
-				////				// therefore "statically" resolving the collision
-				//				if (fOverlap > 0)
-				//				{
-				////					// Statically resolve the collision
-				////			
-				//					vPotentialPosition = { vPotentialPosition - (vRayToNearest.normalized() * fOverlap) * dt };
-				//				}
-				//			}
-				//		}
-				//	}
-
-				////	// Set the objects new position to the allowed potential position
-				//	object.second.vPos = vPotentialPosition;
-				//}
-
-				//object.pos = mapObjects[nPlayerID].vPos;
-				//object.vel = mapObjects[nPlayerID].vVel;
 
 
 
 
-
-				static bool leftMouseButtonReleased{ false };
-				static bool leftMouseButtonPressed{ false };
-				static bool leftMouseButtonHeld{ false };
-				if (isFocused)
-				{
 					if ((leftMouseButtonHeld || leftMouseButtonPressed) && !sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
 					{
 						leftMouseButtonReleased = true;
@@ -980,7 +1179,7 @@ public:
 					}
 
 					// Handle Pan & Zoom
-					if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+					if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && isFocused)
 					{
 						if (leftMouseButtonPressed || leftMouseButtonHeld)
 						{
@@ -999,19 +1198,51 @@ public:
 						leftMouseButtonHeld = false;
 					}
 
-					if (leftMouseButtonPressed)
+					
+
+					if (leftMouseButtonPressed && !isMoving)
 					{
-						startPan(tv, sf::Mouse::getPosition(tv));
+						if (isFocused)
+							startPan(tv, sf::Mouse::getPosition(tv));
 					}
 					else if (leftMouseButtonHeld)
 					{
-						updatePan(tv, sf::Mouse::getPosition(tv), dts[nPlayerID]);
+
+						if (isFocused && object.vel == sf::Vector2f{0.f,0.f} && !isMoving)
+							updatePan(tv, sf::Mouse::getPosition(tv), dtThis);
+						else
+						{
+							if (hasDropped)
+							{
+								initialLoc = sf::Mouse::getPosition(tv);
+								dropPan(tv, sf::Mouse::getPosition(tv));
+							}
+							else
+							{
+								dropPan(tv, sf::Mouse::getPosition(tv));
+							}
+						}
+
 					}
 					else if (leftMouseButtonReleased)
 					{
-						dropPan(tv, sf::Mouse::getPosition(tv));
+						if (isFocused)
+						{
+							dropPan(tv, sf::Mouse::getPosition(tv));
+						}
+						else
+						{
+							if (!hasDropped)
+							{
+								dropPan(tv, sf::Mouse::getPosition(tv));
+							}
+						}
 					}
-				}
+
+					if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) && isPanning && !isMoving && !leftMouseButtonPressed && !leftMouseButtonHeld)
+						isPanning = false;
+			
+					
 			
 				//if (GetMouseWheel() > 0) tv.ZoomAtScreenPos(1.5f, GetMousePos());
 				//if (GetMouseWheel() < 0) tv.ZoomAtScreenPos(0.75f, GetMousePos());
