@@ -41,7 +41,6 @@ class MMOGame : cnet::client_interface<GameMsg>
 		if (hasDropped)
 		{
 			tv.setMouseCursorVisible(false);
-			//tv.setMouseCursorGrabbed(true);
 			sf::Mouse::setPosition({ (sf::Vector2i)(sf::Vector2f{(float)tv.getSize().x / 2.f, (float)tv.getSize().y / 2.f}) }, wnd_);
 			
 
@@ -63,7 +62,6 @@ class MMOGame : cnet::client_interface<GameMsg>
 	{
 		float dispX = 0.f;
 		float dispY = 0.f;
-		//panStart = tv.getView().getCenter();
 		
 		sf::Vector2f mpos = (sf::Vector2f)sf::Mouse::getPosition(wnd_);
 		auto disp = (sf::Vector2f)panStart - mpos;
@@ -71,63 +69,21 @@ class MMOGame : cnet::client_interface<GameMsg>
 		{
 			disp = {disp.normalized().x * 1600.f, disp.normalized().y * 900.f};
 		}
-
-
-	/*	if (mousePos_.x > panStart.x)
-		{
-			dispX = -1600.f;
-		}
-		else if (mousePos_.x < panStart.x)
-		{
-			dispX = 1600.f;
-		}
-		else
-		{
-			dispX = 0.f;
-		}
-
-		if (mousePos_.y > panStart.y)
-		{
-			dispY = -900.f;
-		}
-		else if (mousePos_.y < panStart.y)
-		{
-			dispY = 900.f;
-		}
-		else
-		{
-			dispY = 0.f;
-		}*/
 		sf::View vw = wnd_.getView();
 		vw.move({disp.x * dt_, disp.y * dt_});
-		
-		//panStart = mousePos_;
 		wnd_.setView(vw);
 
 		sf::Mouse::setPosition(panStart, wnd_);
-	
-		
-
-
-		//sf::Mouse::setPosition(tv.mapCoordsToPixel({(float)tv.getView().getCenter().x, (float)tv.getView().getCenter().y }), tv);
-		//panStart = sf::Mouse::getPosition(tv);
 		isPanning = true;
 	}
 
 	void dropPan(sf::RenderWindow& wnd_, sf::Vector2i mousePos_)
 	{
-		//tv.setMouseCursorGrabbed(false);
-		//if (hasDropped == false)
-		//{
 		if (hasDropped == false)
 			sf::Mouse::setPosition(initialLoc, tv);
 		tv.setMouseCursorVisible(true);
 		hasDropped = true;
-		//}
-		//else
-		//{
-	//		tv.setMouseCursorVisible(true);
-		//}
+
 	}
 
 	
@@ -290,10 +246,6 @@ public:
 
 	bool Init()
 	{
-		
-		//mapObjects[0].nUniqueID = 0;
-		//mapObjects[0].vPos = { 3.0f, 3.0f };
-
 		sf::ContextSettings settings;
 		settings.antiAliasingLevel = 8;
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
@@ -360,9 +312,6 @@ public:
 
 					projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
 					projectiles[nPlayerID].clear();
-
-					/*cnet::message<GameMsg> msg;
-					msg.header.id = GameMsg::Server_GetPing;*/
 
 					ServerSync();
 
@@ -438,7 +387,6 @@ public:
 		// Check for incoming network messages
 		if (IsConnected())
 		{
-			//while (handleNewClientMessages(dts)) {};
 			static bool stillWaiting = true;
 			while (stillWaiting)
 			{
@@ -488,9 +436,6 @@ public:
 
 						projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
 						projectiles[nPlayerID].clear();
-
-						/*cnet::message<GameMsg> msg;
-						msg.header.id = GameMsg::Server_GetPing;*/
 
 						ServerSync();
 
@@ -654,24 +599,6 @@ public:
 					dts[player.first] = dtThis;
 				}	
 
-
-				/*if (isFocused)
-				{
-					sf::Vector2i mse = sf::Mouse::getPosition(tv);
-					if (mse.x < 0 || mse.x >= 1600 || mse.y < 0 || mse.y >= 900)
-						isFocused = false;
-
-					
-
-				}
-				else
-				{
-					sf::Vector2i mse = sf::Mouse::getPosition(tv);
-					if (mse.x >= 0 && mse.x < 1600 && mse.y >= 0 && mse.y < 900)
-						isFocused = true;
-				}*/
-
-
 				bool one = tvhandle == GetFocus();
 				bool two = tvhandle == GetForegroundWindow();
 
@@ -728,9 +655,6 @@ public:
 								currZoom = -10.f * dtThis;
 								vw.zoom(1.f + currZoom);
 								
-
-
-								//zoomFactor *= (1.f - 0.2f * dt);
 								tv.setView(vw);
 
 								zoomFactor = { 1600.f / tv.getView().getSize().x , 900.f / tv.getView().getSize().y};
@@ -755,11 +679,7 @@ public:
 							}
 						}
 					}
-					/*else if (event->is<sf::Event::MouseEntered>())
-					{
-						if (!isFocused)
-							tv.requestFocus();
-					}*/
+					
 				}
 
 				
@@ -767,7 +687,6 @@ public:
 				static bool leftMouseButtonPressed{ false };
 				static bool leftMouseButtonHeld{ false };
 				// Control of Player Object
-				//mapObjects[nPlayerID].vVel = { 0.f,0.f };
 
 				const float speed = BASE_SPEED * (1.f / zoomFactor.x); // assuming uniform zoom, you can use zoomFactor.x
 
@@ -944,8 +863,6 @@ public:
 						if (player.first == object.ownerID)
 						{
 							player.second.vPos = object.pos;
-							//if (object.vel != sf::Vector2f{ 0.f,0.f })
-							//object.vel = object.vel.normalized() * 0.001f;
 							player.second.vVel = object.vel;
 
 						}
@@ -1000,7 +917,7 @@ public:
 										//			
 										sf::Vector2f tmp = (vRayToNearest == sf::Vector2f{ 0.f, 0.f }) ? sf::Vector2f{ 0.f, 0.f } : vRayToNearest.normalized();
 										vPotentialPosition = vPotentialPosition - (tmp * fOverlap);
-										//object.second.vVel = { object.second.vVel.x * tmp.x, object.second.vVel.y * tmp.y };
+										
 									}
 								}
 							}
@@ -1014,7 +931,7 @@ public:
 							object.vel = player.second.vVel;
 
 						
-							if (!isPanning)
+							if (!isPanning && isMoving)
 							{
 
 
@@ -1032,54 +949,6 @@ public:
 								tv.setView(vw);
 							}
 
-							//if (object.vel.x > 0.f)
-							//{
-							//	// moving right
-							//	if ((float)tv.mapCoordsToPixel({ object.pos.x * (float)tileSize , tv.getView().getCenter().y }).x > pxlCent.x + off.x)
-							//	{
-							//		auto vw = tv.getView();
-							//		vw.setCenter({ (object.pos.x * (float)tileSize) /*  - off.x */ , vw.getCenter().y});
-							//		tv.setView(vw);
-							//	}
-							//}
-							//else if (object.vel.x < 0.f)
-							//{
-							//	// left
-							//	if ((float)tv.mapCoordsToPixel({ object.pos.x * (float)tileSize , tv.getView().getCenter().y }).x < pxlCent.x - off.x)
-							//	{
-							//		auto vw = tv.getView();
-							//		vw.setCenter({ (object.pos.x * (float)tileSize) /* + off.x */, vw.getCenter().y});
-
-							//		tv.setView(vw);
-
-							//	}
-							//}
-							//if (object.vel.y > 0.f)
-							//{
-							//	// down
-							//	if ((float)tv.mapCoordsToPixel({ tv.getView().getCenter().x, object.pos.y * (float)tileSize }).y > pxlCent.y + off.y)
-							//	{
-							//		auto vw = tv.getView();
-							//		vw.setCenter({ vw.getCenter().x, (object.pos.y * (float)tileSize) }); //- off.y});
-
-							//		tv.setView(vw);
-
-							//	}
-							//}
-							//else if (object.vel.y < 0.f)
-							//{
-							//	// up
-							//	if ((float)tv.mapCoordsToPixel({ tv.getView().getCenter().x, object.pos.y * (float)tileSize }).y < pxlCent.y - off.y)
-							//	{
-							//		auto vw = tv.getView();
-							//		vw.setCenter({ vw.getCenter().x, (object.pos.y * (float)tileSize) });//{ vw.getCenter().x, (object.pos.y * (float)tileSize) + off.y});
-
-							//		tv.setView(vw);
-
-							//		
-							//	}
-
-							//}
 
 						}
 
@@ -1245,15 +1114,7 @@ public:
 			
 					
 			
-				//if (GetMouseWheel() > 0) tv.ZoomAtScreenPos(1.5f, GetMousePos());
-				//if (GetMouseWheel() < 0) tv.ZoomAtScreenPos(0.75f, GetMousePos());
-
-
-				//// FINALIZE POSITIONS
-				//for (auto& o : mapObjects)
-				//{
-				//	o.second.vPos += o.second.vVel * dt;
-				//}
+		
 
 
 				// Clear World
@@ -1302,9 +1163,7 @@ public:
 					
 
 
-					//sf::Sprite p1{ playerTex };
-					//p1.setTextureRect(walkAnim[currentDir].at(currentFrame));
-					//p1.setPosition({ object.second.vPos });
+			
 					tv.draw(shp);
 					if (object.first == this->nPlayerID)
 					{
@@ -1320,16 +1179,6 @@ public:
 						tv.draw(txt);
 					}
 
-
-
-					// Draw Velocity
-				
-					
-					//if (object.second.vVel.mag2() > 0)
-						//tv.DrawLine(object.second.vPos, object.second.vPos + object.second.vVel.norm() * object.second.fRadius, olc::MAGENTA);
-
-					//sf::Vector2i vNameSize = GetTextSizeProp("ID: " + std::to_string(object.first));
-					//tv.DrawStringPropDecal(object.second.vPos - sf::Vector2f{ vNameSize.x * 0.5f * 0.25f * 0.125f, -object.second.fRadius * 1.25f }, "ID: " + std::to_string(object.first), olc::BLUE, { 0.25f, 0.25f });
 				}
 
 
@@ -1348,11 +1197,7 @@ public:
 
 
 					sf::Vector2f velLine = (object.vel.lengthSquared() == 0) ? sf::Vector2f{ 0.f,0.f } : sf::Vector2f{ object.vel.normalized() * 32.f }; //{ (object.vel.x * ((object.fRad * tileSize) / 2.f)) * tileSize,  (object.vel.y * ((object.fRad * tileSize) / 2.f)) * tileSize };
-					/*if (object.vel.x != 0.f && object.vel.y != 0.f)
-					{
-						velLine.x *= 0.70f;
-						velLine.y *= 0.70f;
-					}*/
+					
 					line[1].position = line[0].position + velLine;
 
 					tv.draw(line);

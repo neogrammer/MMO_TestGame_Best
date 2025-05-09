@@ -105,6 +105,8 @@ protected:
 
 		case GameMsg::Client_UnregisterWithServer:
 		{
+		
+
 			break;
 		}
 
