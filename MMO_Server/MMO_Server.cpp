@@ -218,7 +218,7 @@ protected:
 
 		case GameMsg::Server_GetPing:
 		{
-			TimeSync ts;
+	/*		TimeSync ts;
 			msg >> ts;
 
 			ts.timeReachingServer = std::chrono::system_clock::now();
@@ -243,7 +243,7 @@ protected:
 				outMsg << tp;
 				
 				MessageAllClients(newMsg, client);
-			}
+			}*/
 
 
 		}
