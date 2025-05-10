@@ -58,8 +58,7 @@ struct sPlayerDescription
 
 	AnimDir dir = AnimDir::S;
 	uint32_t currFrame = 0;
-	
-	float dt = { 0.f };
+
 
 
 	// when creating a player ping the server, the server gets the ping, calculates the time at the server, updates the message and sends it back where client calcs time once more anduses those threee times to store time to server, and from server time displacements

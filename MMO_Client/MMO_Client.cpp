@@ -6,6 +6,29 @@
 #include <net_client.h>
 #include <net_message.h>
 
+bool isMyWindowInFocus(sf::RenderWindow& wnd_)
+{
+	HWND tvhandle{};
+
+	if (wnd_.isOpen())
+	{
+		tvhandle = (HWND)wnd_.getNativeHandle();
+	}
+
+	bool one = tvhandle == GetFocus();
+	bool two = tvhandle == GetForegroundWindow();
+
+	if (one && two)
+	{
+		// our window is on top and in focus
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 class MMOGame : cnet::client_interface<GameMsg>
 {
 	bool isFocused = true;
@@ -251,7 +274,7 @@ public:
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
 
 		tv.create( sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed , settings);
-		if (Connect("127.0.0.1", 60000))
+		if (Connect("192.168.0.6", 60000))
 		{
 			object.pos = { 3.f,3.f };
 			return true;
@@ -260,7 +283,7 @@ public:
 		return false;
 	}
 
-	bool handleNewClientMessages(std::map<uint32_t, float>& dts)
+	bool handleNewClientMessages()
 	{
 		bool waiting = true;
 
@@ -313,8 +336,6 @@ public:
 					projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
 					projectiles[nPlayerID].clear();
 
-					ServerSync();
-
 
 					break;
 				}
@@ -338,7 +359,7 @@ public:
 					mapObjects.insert_or_assign(desc.nUniqueID, desc);
 					projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
 					projectiles[desc.nUniqueID].clear();
-					dts.insert_or_assign(desc.nUniqueID, desc.dt);
+					//dts.insert_or_assign(desc.nUniqueID, desc.dt);
 
 					// Special handling for your own player:
 					if (desc.nUniqueID == nPlayerID)
@@ -378,245 +399,109 @@ public:
 
 	void handleCoreLoopMessages()
 	{
+		while (!Incoming().empty())
+		{
+			auto msg = Incoming().pop_front().msg;
 
+			switch (msg.header.id)
+			{
+
+			case(GameMsg::Game_AddBullet):
+			{
+				BulletDescription desc;
+				msg >> desc;
+				if (projectiles.find(desc.nUniqueID) == projectiles.end())
+				{
+					projectiles[desc.nUniqueID] = std::vector<WorldObject>{};
+					projectiles[desc.nUniqueID].clear();
+				}
+				projectiles[desc.nUniqueID].emplace_back(WorldObject{});
+				projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].pos = desc.pos;
+				projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].vel = desc.vel;
+				projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].fRad = desc.fRad;
+				projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].ownerID = desc.nUniqueID;
+
+				break;
+			}
+
+			case(GameMsg::Game_RemoveBullet):
+			{
+				BulletDescription desc;
+				msg >> desc;
+				projectiles[desc.nUniqueID].erase(projectiles[desc.nUniqueID].begin() + (desc.index));
+				break;
+			}
+
+			case(GameMsg::Game_UpdateBullet):
+			{
+
+				break;
+			}
+
+
+
+
+			case(GameMsg::Game_AddPlayer):
+			{
+				sPlayerDescription desc;
+				msg >> desc;
+
+				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
+				projectiles[desc.nUniqueID].clear();
+				//dts.insert_or_assign(desc.nUniqueID, desc.dt);
+
+				// Special handling for your own player:
+				if (desc.nUniqueID == nPlayerID)
+				{
+					object.ownerID = nPlayerID; // Just ensure it's correct again
+					object.pos = desc.vPos;
+					bWaitingForConnection = false;
+				}
+
+				break;
+			}
+
+			case(GameMsg::Game_RemovePlayer):
+			{
+				uint32_t nRemovalID = 0;
+				msg >> nRemovalID;
+				mapObjects.erase(nRemovalID);
+				projectiles.erase(nRemovalID);
+				break;
+			}
+
+			case(GameMsg::Game_UpdatePlayer):
+			{
+				sPlayerDescription desc;
+				msg >> desc;
+				//dts.insert_or_assign(desc.nUniqueID, desc.dt);
+				mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				break;
+			}
+			}
+		}
 	}
+
+	
 
 	bool run()
 	{
 
-		HWND tvhandle{};
-		std::map<uint32_t, float> dts{};
+	//HWND tvhandle{};
+		//std::map<uint32_t, float> dts{};
 		sf::Clock timer{};
 		// Check for incoming network messages
 		if (IsConnected())
 		{
-			static bool stillWaiting = true;
-			while (stillWaiting)
-			{
-
-
-				//while (!Incoming().empty())
-				//{
-				//	auto msg = Incoming().pop_front().msg;
-
-				//	switch (msg.header.id)
-				//	{
-				//	case GameMsg::Server_GetPing:
-				//	{
-				//		TimePlayer tp;
-				//		msg >> tp;
-
-				//		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-				//		diffClientToServer.insert_or_assign(tp.id, tp.ts.timeReachingServer.time_since_epoch().count() - tp.ts.timeBegin.time_since_epoch().count());
-				//		diffServerToClient.insert_or_assign(tp.id, timeNow.time_since_epoch().count() - tp.ts.timeReachingServer.time_since_epoch().count());
-
-				//	}
-				//	break;
-				//	case(GameMsg::Client_Accepted):
-				//	{
-				//		std::cout << "Server accepted client - you're in!\n";
-				//		cnet::message<GameMsg> msg;
-				//		msg.header.id = GameMsg::Client_RegisterWithServer;
-				//		descPlayer.vPos = { 3.0f,3.0f };
-				//		msg << descPlayer;
-				//		Send(msg);
-				//		break;
-				//	}
-
-				//	case(GameMsg::Client_AssignID):
-				//	{
-				//		// Server is assigning us OUR id
-				//		msg >> nPlayerID;
-				//		std::cout << "Assigned Client ID = " << nPlayerID << "\n";
-				//		mapObjects[nPlayerID] = sPlayerDescription{};
-				//		mapObjects[nPlayerID].nUniqueID = nPlayerID;
-				//		mapObjects[nPlayerID].fRadius = 32.f;
-				//		mapObjects[nPlayerID].vPos = { 3.0f,3.0f };
-
-				//		// CRUCIAL STEP: update the WorldObject's ownerID here
-				//		object.ownerID = nPlayerID;
-
-
-				//		projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
-				//		projectiles[nPlayerID].clear();
-
-				//		ServerSync();
-
-				//		
-				//		break;
-				//	}
-
-				//	case GameMsg::Server_GetOwnTime:
-				//	{
-
-				//		TimeSync ts;
-				//		msg >> ts;
-				//		ts.timeFromServer = std::chrono::system_clock::now();
-				//		diffClientToServer.insert_or_assign(nPlayerID, ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count());
-				//		diffServerToClient.insert_or_assign(nPlayerID, ts.timeFromServer.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count());
-
-				//	}
-				//	break;
-				//	case(GameMsg::Game_AddPlayer):
-				//	{
-				//		sPlayerDescription desc;
-				//		msg >> desc;
-
-				//		mapObjects.insert_or_assign(desc.nUniqueID, desc);
-				//		projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
-				//		projectiles[desc.nUniqueID].clear();
-				//		dts.insert_or_assign(desc.nUniqueID, desc.dt);
-
-				//		// Special handling for your own player:
-				//		if (desc.nUniqueID == nPlayerID)
-				//		{
-				//			object.ownerID = nPlayerID; // Just ensure it's correct again
-				//			object.pos = desc.vPos;
-				//			object.pos = sf::Vector2f{ tv.getView().getCenter().x / (float)tileSize, tv.getView().getCenter().y / (float)tileSize};
-				//			bWaitingForConnection = false;
-				//		}
-
-				//		break;
-				//	}
-
-				//	}
-				//}
-
-
-				//if (bWaitingForConnection)
-				//{
-				//	tv.clear(sf::Color(47, 147, 247, 255));
-				//	std::cout << "\n" << "Waiting To Connect..." << std::endl;
-				//	stillWaiting = true;
-				//}
-				//else
-				//{
-				//	stillWaiting = false;
-				//}
-
-				stillWaiting = handleNewClientMessages(dts);
-
-		
-			}
-
-			if (tv.isOpen())
-			{
-				tvhandle = (HWND)tv.getNativeHandle();
-			}
+			while (bool stillWaiting = handleNewClientMessages()) {};
 
 			while (tv.isOpen())
 			{
+				handleCoreLoopMessages();
 
-
-
-				while (!Incoming().empty())
-				{
-					auto msg = Incoming().pop_front().msg;
-
-					switch (msg.header.id)
-					{
-
-					case(GameMsg::Game_AddBullet):
-					{
-						BulletDescription desc;
-						msg >> desc;
-						if (projectiles.find(desc.nUniqueID) == projectiles.end())
-						{
-							projectiles[desc.nUniqueID] = std::vector<WorldObject>{};
-							projectiles[desc.nUniqueID].clear();
-						}
-						projectiles[desc.nUniqueID].emplace_back(WorldObject{});
-						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].pos = desc.pos;
-						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].vel = desc.vel;
-						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].fRad = desc.fRad;
-						projectiles[desc.nUniqueID][projectiles[desc.nUniqueID].size() - 1].ownerID = desc.nUniqueID;
-
-						break;
-					}
-
-					case(GameMsg::Game_RemoveBullet):
-					{
-						BulletDescription desc;
-						msg >> desc;
-						projectiles[desc.nUniqueID].erase(projectiles[desc.nUniqueID].begin() + (desc.index));
-						break;
-					}
-
-					case(GameMsg::Game_UpdateBullet):
-					{
-
-						break;
-					}
-
-
-
-
-					case(GameMsg::Game_AddPlayer):
-					{
-						sPlayerDescription desc;
-						msg >> desc;
-
-						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-						projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
-						projectiles[desc.nUniqueID].clear();
-						dts.insert_or_assign(desc.nUniqueID, desc.dt);
-
-						// Special handling for your own player:
-						if (desc.nUniqueID == nPlayerID)
-						{
-							object.ownerID = nPlayerID; // Just ensure it's correct again
-							object.pos = desc.vPos;
-							bWaitingForConnection = false;
-						}
-
-						break;
-					}
-
-					case(GameMsg::Game_RemovePlayer):
-					{
-						uint32_t nRemovalID = 0;
-						msg >> nRemovalID;
-						mapObjects.erase(nRemovalID);
-						projectiles.erase(nRemovalID);
-						break;
-					}
-
-					case(GameMsg::Game_UpdatePlayer):
-					{
-						sPlayerDescription desc;
-						msg >> desc;
-						dts.insert_or_assign(desc.nUniqueID, desc.dt);
-						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-						break;
-					}
-					}
-				}
-
-
-				// Server Sync here??
-				ServerSync();
-
-				float dtThis = timer.restart().asSeconds();
-				dts[nPlayerID] = dtThis;
-				for (auto& player : mapObjects)
-				{
-					if (player.first == nPlayerID) continue;
-					dts[player.first] = dtThis;
-				}	
-
-				bool one = tvhandle == GetFocus();
-				bool two = tvhandle == GetForegroundWindow();
-
-				if (one && two)
-				{
-					// our window is on top and in focus
-					isFocused = true;
-				}
-				else
-				{
-					isFocused = false;
-				}
-
+				float dt = timer.restart().asSeconds();
+				isFocused = isMyWindowInFocus(tv);
 
 				while (const std::optional event = tv.pollEvent())
 				{
@@ -657,7 +542,7 @@ public:
 							{
 								// scrolled up, zoom un
 								auto vw = tv.getView();
-								currZoom = -10.f * dtThis;
+								currZoom = -10.f * dt;
 								vw.zoom(1.f + currZoom);
 								
 								tv.setView(vw);
@@ -669,7 +554,7 @@ public:
 							{
 								// scrolled down, zoom out
 								auto vw = tv.getView();
-								currZoom = 10.f * dtThis;
+								currZoom = 10.f * dt;
 
 								vw.zoom(1.f + currZoom);
 							
@@ -707,7 +592,7 @@ public:
 
 						//isPanning = false;
 						currDir = Direction::NW;
-						object.vel = { -speed * 0.7071f * dtThis, -speed * 0.7071f * dtThis };
+						object.vel = { -speed * 0.7071f * dt, -speed * 0.7071f * dt };
 					}
 					else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
 					{
@@ -715,7 +600,7 @@ public:
 						isMoving = true;
 
 						currDir = Direction::NE;
-						object.vel = { speed * 0.7071f * dtThis, -speed * 0.7071f * dtThis };
+						object.vel = { speed * 0.7071f * dt, -speed * 0.7071f * dt };
 
 
 					}
@@ -725,7 +610,7 @@ public:
 						isMoving = true;
 
 						currDir = Direction::SW;
-						object.vel = { -speed * 0.7071f * dtThis, speed * 0.7071f * dtThis };
+						object.vel = { -speed * 0.7071f * dt, speed * 0.7071f * dt };
 
 					}
 					else if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::S) && sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::D))
@@ -734,7 +619,7 @@ public:
 						isMoving = true;
 
 						currDir = Direction::SE;
-						object.vel = { speed * 0.7071f * dtThis, speed * 0.7071f * dtThis };
+						object.vel = { speed * 0.7071f * dt, speed * 0.7071f * dt };
 
 					}
 					//mapObjects[nPlayerID].vVel = { 0.0f, 0.0f };
@@ -744,7 +629,7 @@ public:
 						if (!isPanning && sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
 						{
 							//isPanning = false;
-							object.vel.y = -speed * dtThis;
+							object.vel.y = -speed * dt;
 							isMoving = true;
 
 							//mapObjects[nPlayerID].vVel.y = -0.02f;
@@ -756,7 +641,7 @@ public:
 							//isPanning = false;
 							isMoving = true;
 
-							object.vel.y = speed * dtThis;
+							object.vel.y = speed * dt;
 							currDir = Direction::S;
 						}// mapObjects[nPlayerID].vVel.y = 0.02f; }
 
@@ -765,7 +650,7 @@ public:
 							isMoving = true;
 
 							//isPanning = false;
-							object.vel.x = -speed * dtThis;
+							object.vel.x = -speed * dt;
 							currDir = Direction::W;
 
 						} //mapObjects[nPlayerID].vVel.x = -0.02f; }
@@ -774,7 +659,7 @@ public:
 							isMoving = true;
 
 							//isPanning = false;
-							object.vel.x = speed * dtThis;
+							object.vel.x = speed * dt;
 							currDir = Direction::E;
 
 						}
@@ -864,7 +749,7 @@ public:
 				{
 					
 
-					float deet = dtThis;
+					float deet = dt;
 						if (player.first == object.ownerID)
 						{
 							player.second.vPos = object.pos;
@@ -972,8 +857,6 @@ public:
 				{
 					for (auto& bullet : playerBullets.second)
 					{
-						float dt = dtThis;//dts[bullet.ownerID];
-
 						sf::Vector2f bulletPoss = bullet.pos + (bullet.vel * dt);
 
 						sf::Vector2i vCurrentCell = { (int)(floorf(bullet.pos.x)), (int)(floorf(bullet.pos.y)) };
@@ -1084,7 +967,7 @@ public:
 					{
 
 						if (isFocused && object.vel == sf::Vector2f{0.f,0.f} && !isMoving)
-							updatePan(tv, sf::Mouse::getPosition(tv), dtThis);
+							updatePan(tv, sf::Mouse::getPosition(tv), dt);
 						else
 						{
 							if (hasDropped)
@@ -1254,7 +1137,6 @@ public:
 				msg.header.id = GameMsg::Game_UpdatePlayer;
 				mapObjects[nPlayerID].vPos = object.pos;
 				mapObjects[nPlayerID].vVel = object.vel;
-				mapObjects[nPlayerID].dt = dts[nPlayerID];
 				msg << mapObjects[nPlayerID];
 				Send(msg);
 			}
