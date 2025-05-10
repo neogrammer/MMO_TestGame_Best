@@ -262,9 +262,9 @@ public:
 
 	bool handleNewClientMessages(std::map<uint32_t, float>& dts)
 	{
-		bool stillWaiting = true;
+		bool waiting = true;
 
-		while (stillWaiting)
+		while (waiting)
 		{
 
 
@@ -345,6 +345,9 @@ public:
 					{
 						object.ownerID = nPlayerID; // Just ensure it's correct again
 						object.pos = desc.vPos;
+						auto vw = tv.getView();
+						vw.setCenter(object.pos * (float)tileSize);
+						tv.setView(vw);
 						bWaitingForConnection = false;
 					}
 
@@ -359,17 +362,17 @@ public:
 			{
 				tv.clear(sf::Color(47, 147, 247, 255));
 				std::cout << "\n" << "Waiting To Connect..." << std::endl;
-				stillWaiting = true;
+				waiting = true;
 			}
 			else
 			{
-				stillWaiting = false;
+				waiting = false;
 			}
 
 
 		}
 
-		return false;
+		return waiting;
 
 	}
 
@@ -392,104 +395,106 @@ public:
 			{
 
 
-				while (!Incoming().empty())
-				{
-					auto msg = Incoming().pop_front().msg;
+				//while (!Incoming().empty())
+				//{
+				//	auto msg = Incoming().pop_front().msg;
 
-					switch (msg.header.id)
-					{
-					case GameMsg::Server_GetPing:
-					{
-						TimePlayer tp;
-						msg >> tp;
+				//	switch (msg.header.id)
+				//	{
+				//	case GameMsg::Server_GetPing:
+				//	{
+				//		TimePlayer tp;
+				//		msg >> tp;
 
-						std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-						diffClientToServer.insert_or_assign(tp.id, tp.ts.timeReachingServer.time_since_epoch().count() - tp.ts.timeBegin.time_since_epoch().count());
-						diffServerToClient.insert_or_assign(tp.id, timeNow.time_since_epoch().count() - tp.ts.timeReachingServer.time_since_epoch().count());
+				//		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+				//		diffClientToServer.insert_or_assign(tp.id, tp.ts.timeReachingServer.time_since_epoch().count() - tp.ts.timeBegin.time_since_epoch().count());
+				//		diffServerToClient.insert_or_assign(tp.id, timeNow.time_since_epoch().count() - tp.ts.timeReachingServer.time_since_epoch().count());
 
-					}
-					break;
-					case(GameMsg::Client_Accepted):
-					{
-						std::cout << "Server accepted client - you're in!\n";
-						cnet::message<GameMsg> msg;
-						msg.header.id = GameMsg::Client_RegisterWithServer;
-						descPlayer.vPos = { 3.0f,3.0f };
-						msg << descPlayer;
-						Send(msg);
-						break;
-					}
+				//	}
+				//	break;
+				//	case(GameMsg::Client_Accepted):
+				//	{
+				//		std::cout << "Server accepted client - you're in!\n";
+				//		cnet::message<GameMsg> msg;
+				//		msg.header.id = GameMsg::Client_RegisterWithServer;
+				//		descPlayer.vPos = { 3.0f,3.0f };
+				//		msg << descPlayer;
+				//		Send(msg);
+				//		break;
+				//	}
 
-					case(GameMsg::Client_AssignID):
-					{
-						// Server is assigning us OUR id
-						msg >> nPlayerID;
-						std::cout << "Assigned Client ID = " << nPlayerID << "\n";
-						mapObjects[nPlayerID] = sPlayerDescription{};
-						mapObjects[nPlayerID].nUniqueID = nPlayerID;
-						mapObjects[nPlayerID].fRadius = 32.f;
-						mapObjects[nPlayerID].vPos = { 3.0f,3.0f };
+				//	case(GameMsg::Client_AssignID):
+				//	{
+				//		// Server is assigning us OUR id
+				//		msg >> nPlayerID;
+				//		std::cout << "Assigned Client ID = " << nPlayerID << "\n";
+				//		mapObjects[nPlayerID] = sPlayerDescription{};
+				//		mapObjects[nPlayerID].nUniqueID = nPlayerID;
+				//		mapObjects[nPlayerID].fRadius = 32.f;
+				//		mapObjects[nPlayerID].vPos = { 3.0f,3.0f };
 
-						// CRUCIAL STEP: update the WorldObject's ownerID here
-						object.ownerID = nPlayerID;
-
-
-						projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
-						projectiles[nPlayerID].clear();
-
-						ServerSync();
-
-						
-						break;
-					}
-
-					case GameMsg::Server_GetOwnTime:
-					{
-
-						TimeSync ts;
-						msg >> ts;
-						ts.timeFromServer = std::chrono::system_clock::now();
-						diffClientToServer.insert_or_assign(nPlayerID, ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count());
-						diffServerToClient.insert_or_assign(nPlayerID, ts.timeFromServer.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count());
-
-					}
-					break;
-					case(GameMsg::Game_AddPlayer):
-					{
-						sPlayerDescription desc;
-						msg >> desc;
-
-						mapObjects.insert_or_assign(desc.nUniqueID, desc);
-						projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
-						projectiles[desc.nUniqueID].clear();
-						dts.insert_or_assign(desc.nUniqueID, desc.dt);
-
-						// Special handling for your own player:
-						if (desc.nUniqueID == nPlayerID)
-						{
-							object.ownerID = nPlayerID; // Just ensure it's correct again
-							object.pos = desc.vPos;
-							object.pos = sf::Vector2f{ tv.getView().getCenter().x / (float)tileSize, tv.getView().getCenter().y / (float)tileSize};
-							bWaitingForConnection = false;
-						}
-
-						break;
-					}
-
-					}
-				}
+				//		// CRUCIAL STEP: update the WorldObject's ownerID here
+				//		object.ownerID = nPlayerID;
 
 
-				if (bWaitingForConnection)
-				{
-					tv.clear(sf::Color(47, 147, 247, 255));
-					std::cout << "\n" << "Waiting To Connect..." << std::endl;
-					stillWaiting = true;
-				}
-				else
-				{
-					stillWaiting = false;
-				}
+				//		projectiles.emplace(nPlayerID, std::vector<WorldObject>{});
+				//		projectiles[nPlayerID].clear();
+
+				//		ServerSync();
+
+				//		
+				//		break;
+				//	}
+
+				//	case GameMsg::Server_GetOwnTime:
+				//	{
+
+				//		TimeSync ts;
+				//		msg >> ts;
+				//		ts.timeFromServer = std::chrono::system_clock::now();
+				//		diffClientToServer.insert_or_assign(nPlayerID, ts.timeReachingServer.time_since_epoch().count() - ts.timeBegin.time_since_epoch().count());
+				//		diffServerToClient.insert_or_assign(nPlayerID, ts.timeFromServer.time_since_epoch().count() - ts.timeReachingServer.time_since_epoch().count());
+
+				//	}
+				//	break;
+				//	case(GameMsg::Game_AddPlayer):
+				//	{
+				//		sPlayerDescription desc;
+				//		msg >> desc;
+
+				//		mapObjects.insert_or_assign(desc.nUniqueID, desc);
+				//		projectiles.insert_or_assign(desc.nUniqueID, std::vector<WorldObject>{});
+				//		projectiles[desc.nUniqueID].clear();
+				//		dts.insert_or_assign(desc.nUniqueID, desc.dt);
+
+				//		// Special handling for your own player:
+				//		if (desc.nUniqueID == nPlayerID)
+				//		{
+				//			object.ownerID = nPlayerID; // Just ensure it's correct again
+				//			object.pos = desc.vPos;
+				//			object.pos = sf::Vector2f{ tv.getView().getCenter().x / (float)tileSize, tv.getView().getCenter().y / (float)tileSize};
+				//			bWaitingForConnection = false;
+				//		}
+
+				//		break;
+				//	}
+
+				//	}
+				//}
+
+
+				//if (bWaitingForConnection)
+				//{
+				//	tv.clear(sf::Color(47, 147, 247, 255));
+				//	std::cout << "\n" << "Waiting To Connect..." << std::endl;
+				//	stillWaiting = true;
+				//}
+				//else
+				//{
+				//	stillWaiting = false;
+				//}
+
+				stillWaiting = handleNewClientMessages(dts);
 
 		
 			}
