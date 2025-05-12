@@ -27,6 +27,18 @@
     <Filter Include="cidsrc\stage">
       <UniqueIdentifier>{09c2fd49-ab93-42ec-8752-006b5796712f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cidsrc\resources">
+      <UniqueIdentifier>{a6b4ac44-450b-4353-8e3f-bb624179260c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cidsrc\game_objects">
+      <UniqueIdentifier>{fcdd589d-9b1d-4dc8-9e26-355fb6dcd76a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cidsrc\handlers">
+      <UniqueIdentifier>{f1146f7b-f234-449f-82bb-8787246770d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cidsrc\animation">
+      <UniqueIdentifier>{3f42b992-711a-4d60-8260-1f8e0ff9db2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="olcPGEX_Network.h">
@@ -40,6 +52,63 @@
     </ClInclude>
     <ClInclude Include="cidsrc\stage\StageLoader.h">
       <Filter>cidsrc\stage</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\stage\Stage.h">
+      <Filter>cidsrc\stage</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\stage\Tilemap.h">
+      <Filter>cidsrc\stage</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\resources\Cfg.h">
+      <Filter>cidsrc\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\resources\ResourceMgr.h">
+      <Filter>cidsrc\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\game_objects\AnimObject.h">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\game_objects\GameObject.h">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\game_objects\InvariantObject.h">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\game_objects\Player.h">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\game_objects\Projectile.h">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\handlers\AnimMgr.h">
+      <Filter>cidsrc\handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\Animation.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\AnimTypes.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\DuckFold.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\Events.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\FSM.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\FSMEvent.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\IgnoreUnknownEvent.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\PlayerAnimFSM.h">
+      <Filter>cidsrc\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\animation\PlayerAnimStates.h">
+      <Filter>cidsrc\animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +130,39 @@
     </ClCompile>
     <ClCompile Include="cidsrc\stage\StageLoader.cpp">
       <Filter>cidsrc\stage</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\stage\Stage.cpp">
+      <Filter>cidsrc\stage</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\stage\Tilemap.cpp">
+      <Filter>cidsrc\stage</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\resources\Cfg.cpp">
+      <Filter>cidsrc\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\game_objects\AnimObject.cpp">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\game_objects\GameObject.cpp">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\game_objects\InvariantObject.cpp">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\game_objects\Player.cpp">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\game_objects\Projectile.cpp">
+      <Filter>cidsrc\game_objects</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\handlers\AnimMgr.cpp">
+      <Filter>cidsrc\handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\animation\Animation.cpp">
+      <Filter>cidsrc\animation</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\animation\FSMEvent.cpp">
+      <Filter>cidsrc\animation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

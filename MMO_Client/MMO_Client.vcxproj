@@ -154,8 +154,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="cidsrc\animation\Animation.h" />
+    <ClInclude Include="cidsrc\animation\AnimTypes.h" />
+    <ClInclude Include="cidsrc\animation\DuckFold.h" />
+    <ClInclude Include="cidsrc\animation\Events.h" />
+    <ClInclude Include="cidsrc\animation\FSM.h" />
+    <ClInclude Include="cidsrc\animation\FSMEvent.h" />
+    <ClInclude Include="cidsrc\animation\IgnoreUnknownEvent.h" />
+    <ClInclude Include="cidsrc\animation\PlayerAnimFSM.h" />
+    <ClInclude Include="cidsrc\animation\PlayerAnimStates.h" />
+    <ClInclude Include="cidsrc\game_objects\AnimObject.h" />
+    <ClInclude Include="cidsrc\game_objects\GameObject.h" />
+    <ClInclude Include="cidsrc\game_objects\InvariantObject.h" />
+    <ClInclude Include="cidsrc\game_objects\Player.h" />
+    <ClInclude Include="cidsrc\game_objects\Projectile.h" />
+    <ClInclude Include="cidsrc\handlers\AnimMgr.h" />
+    <ClInclude Include="cidsrc\resources\Cfg.h" />
+    <ClInclude Include="cidsrc\resources\ResourceMgr.h" />
+    <ClInclude Include="cidsrc\stage\Stage.h" />
     <ClInclude Include="cidsrc\stage\StageData.h" />
     <ClInclude Include="cidsrc\stage\StageLoader.h" />
+    <ClInclude Include="cidsrc\stage\Tilemap.h" />
     <ClInclude Include="olcPGEX_Network.h" />
     <ClInclude Include="olcPGEX_TransformedView.h" />
   </ItemGroup>
@@ -167,7 +186,18 @@
     <None Include="assets\data\stage_1.json" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cidsrc\animation\Animation.cpp" />
+    <ClCompile Include="cidsrc\animation\FSMEvent.cpp" />
+    <ClCompile Include="cidsrc\game_objects\AnimObject.cpp" />
+    <ClCompile Include="cidsrc\game_objects\GameObject.cpp" />
+    <ClCompile Include="cidsrc\game_objects\InvariantObject.cpp" />
+    <ClCompile Include="cidsrc\game_objects\Player.cpp" />
+    <ClCompile Include="cidsrc\game_objects\Projectile.cpp" />
+    <ClCompile Include="cidsrc\handlers\AnimMgr.cpp" />
+    <ClCompile Include="cidsrc\resources\Cfg.cpp" />
+    <ClCompile Include="cidsrc\stage\Stage.cpp" />
     <ClCompile Include="cidsrc\stage\StageLoader.cpp" />
+    <ClCompile Include="cidsrc\stage\Tilemap.cpp" />
     <ClCompile Include="MMO_Client.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
