@@ -9,19 +9,41 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="assets">
+      <UniqueIdentifier>{52b8033b-71cf-402c-8415-e36858c04b3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\data">
+      <UniqueIdentifier>{fe745f5d-5739-4129-8fbb-bfdd98220083}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cidsrc">
+      <UniqueIdentifier>{6077025d-4f1d-4277-8f1d-635491bb3787}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cidsrc\stage">
+      <UniqueIdentifier>{6c251d35-1323-4d41-8359-c69d56012e81}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MMO_Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cidsrc\stage\StageLoader.cpp">
+      <Filter>cidsrc\stage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MMO_Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cidsrc\stage\StageData.h">
+      <Filter>cidsrc\stage</Filter>
+    </ClInclude>
+    <ClInclude Include="cidsrc\stage\StageLoader.h">
+      <Filter>cidsrc\stage</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\data\stage_1.json">
+      <Filter>assets\data</Filter>
+    </None>
   </ItemGroup>
 </Project>

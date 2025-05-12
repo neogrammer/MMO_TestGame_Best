@@ -35,7 +35,7 @@ class MMOGame : cnet::client_interface<GameMsg>
 	sf::RenderWindow tv;
 	sf::Vector2i initialLoc = { 0,0 };
 	sf::Vector2i panStart = { 0,0 };
-	sf::Font fnt{ "assets/font1.ttf" };
+	sf::Font fnt{ "assets/fonts/font1.ttf" };
 	sf::Texture playerTex{ "assets/textures/players/playerSheet.png" };
 	const float BASE_SPEED = 2.f; // 120 pixels per second at normal zoom (1.f)
 	sf::Vector2f zoomFactor{ 1.f,1.f };
@@ -272,7 +272,7 @@ public:
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
 
 		tv.create( sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed , settings);
-		if (Connect("192.168.0.6", 60000))
+		if (Connect("127.0.0.1", 60000))
 		{
 			object.pos = { 3.f,3.f };
 			return true;
