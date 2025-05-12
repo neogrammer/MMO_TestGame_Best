@@ -5,6 +5,12 @@
 #include <map>
 #include <net_client.h>
 #include <net_message.h>
+#include <stage/StageLoader.h>
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+using namespace StageLoader;
+
 
 bool isMyWindowInFocus(sf::RenderWindow& wnd_)
 {
@@ -31,6 +37,9 @@ bool isMyWindowInFocus(sf::RenderWindow& wnd_)
 
 class MMOGame : cnet::client_interface<GameMsg>
 {
+	std::unique_ptr<StageData> currStage;
+	std::unique_ptr<sf::Texture> currTileset;
+	std::vector<sf::IntRect> tileRects;
 	bool isFocused = true;
 	sf::RenderWindow tv;
 	sf::Vector2i initialLoc = { 0,0 };
@@ -196,12 +205,37 @@ public:
 	MMOGame()
 		: tv{ sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed }
 		, sAppName{ "MMO Client" }
+		, currStage{}
+		, currTileset{}
+		, tileRects{}
 	{
 		projectiles.clear();
 
 		object.ownerID = nPlayerID;
 
 		currDir = Direction::S;
+		
+		currStage = std::make_unique<StageData>();
+		*currStage = StageLoader::loadFromJsonFile("assets/data/stage_1.json");
+
+		std::cout << currStage->map.floors[0].tiles[2] << std::endl;
+
+
+		currTileset = std::make_unique<sf::Texture>("assets/textures/tilesets/stage_1_tileset.png");
+
+		tileRects.clear();
+		tileRects.reserve(17 * 19);
+
+
+
+		for (int y = 0; y < 17; y++)
+		{
+			for (int x = 0; x < 19; x++)
+			{
+				tileRects.emplace_back(sf::IntRect{ {x*(int)currStage->tileSize,y*(int)currStage->tileSize},{(int)currStage->tileSize,(int)currStage->tileSize} });
+			}
+		}
+
 	}
 
 private:
@@ -835,7 +869,13 @@ public:
 			{
 				if (sWorldMap[y * vWorldSize.x + x] == '#')
 				{
-					sf::RectangleShape rect{ {64.f,64.f} };
+					sf::Sprite spr{ *currTileset };
+					spr.setTextureRect(tileRects[currStage->map.floors[0].tiles[y * 19 + x]]);
+					spr.setPosition({(float)x*(float)currStage->tileSize,(float)y*(float)currStage->tileSize});
+
+					tv.draw(spr);
+
+					/*sf::RectangleShape rect{ {64.f,64.f} };
 					rect.setFillColor(sf::Color::Transparent);
 					rect.setOutlineColor(sf::Color::White);
 					rect.setOutlineThickness(1);
@@ -846,7 +886,7 @@ public:
 					rect2.setOutlineThickness(1);
 					rect2.setPosition({ (float)(x * tileSize + 7), (float)(y * tileSize + 7) });
 					tv.draw(rect);
-					tv.draw(rect2);
+					tv.draw(rect2);*/
 				}
 			}
 		}
