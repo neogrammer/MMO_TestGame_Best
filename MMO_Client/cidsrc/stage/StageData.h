@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <resources/Cfg.h>
 
 
 enum class LinkType : uint8_t {               // encode however you like
@@ -57,7 +58,7 @@ struct Interactive {
 
 struct StageData {
 	std::string          name;
-	std::string          textureID;           // keep as string; client maps → enum
+	Cfg::Textures          textureID{ Cfg::Textures::Invariant };           // keep as string; client maps → enum
 	uint32_t             tileSize = 0;
 	uint32_t             revision = 0;
 

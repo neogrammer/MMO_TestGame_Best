@@ -6,6 +6,7 @@
 #include <net_client.h>
 #include <net_message.h>
 #include <stage/StageLoader.h>
+#include <stage/Tilemap.h>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -50,7 +51,8 @@ class MMOGame : cnet::client_interface<GameMsg>
 	sf::Vector2f zoomFactor{ 1.f,1.f };
 	int tileSize{ 64 };
 	bool hasDropped{ true };
-
+	TileMap tilemap1;
+	
 	std::map<uint32_t, sPlayerDescription> mapObjects;
 	std::map<AnimDir, std::vector<sf::IntRect>> walkAnim
 	{
@@ -208,6 +210,7 @@ public:
 		, currStage{}
 		, currTileset{}
 		, tileRects{}
+		, tilemap1{}
 	{
 		projectiles.clear();
 
@@ -235,7 +238,7 @@ public:
 				tileRects.emplace_back(sf::IntRect{ {x*(int)currStage->tileSize,y*(int)currStage->tileSize},{(int)currStage->tileSize,(int)currStage->tileSize} });
 			}
 		}
-
+		tilemap1.build(*currStage);
 	}
 
 private:
@@ -890,7 +893,7 @@ public:
 				}
 			}
 		}
-
+		tv.draw(tilemap1);
 
 
 
@@ -1107,9 +1110,12 @@ public:
 
 int main()
 {
+	Cfg::Initialize();
+
 	MMOGame demo;
 	demo.Init();
 
 	demo.run();
+
 	return 0;
 }

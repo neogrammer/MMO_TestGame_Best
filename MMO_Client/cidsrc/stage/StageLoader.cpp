@@ -2,6 +2,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <unordered_map>
+#include <animation/Animation.h>
 #include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
@@ -25,6 +26,7 @@ static std::string linkTypeToString(LinkType t) {
     }
 }
 
+
 /* ───────────────── loader ───────────────── */
 StageData StageLoader::loadFromJsonFile(const std::filesystem::path& file)
 {
@@ -36,7 +38,7 @@ StageData StageLoader::loadFromJsonFile(const std::filesystem::path& file)
 
     /* basic fields */
     sd.name = j.at("name").get<std::string>();
-    sd.textureID = j.at("textureID").get<std::string>();
+    sd.textureID = TextureIDLUT[j.at("textureID").get<std::string>()];
     sd.tileSize = j.value("tileSize", 50u);
     sd.revision = j.value("revision", 0u);
 
@@ -108,7 +110,7 @@ void StageLoader::saveToJsonFile(const StageData& stage, const std::filesystem::
 {
     json j;
     j["name"] = stage.name;
-    j["textureID"] = stage.textureID;
+    j["textureID"] = TexStringLUT[stage.textureID];
     j["tileSize"] = stage.tileSize;
     j["revision"] = stage.revision;
 
