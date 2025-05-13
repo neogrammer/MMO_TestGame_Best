@@ -54,29 +54,37 @@ public:
     /// <summary>
     ///  Call after the game map is in the final spot for the frame, or it will be rendering at the wrong spot in the game world
     /// </summary>
-    void update(sf::Vector2f pos_)
+    void update(sf::Vector2f pos_, sf::RenderWindow& wnd_)
     {
         // assume pos_ is the (0,0) pixel on the screen, representing (mapoffX, mapoffY) of the view the player sees currently
-        auto w = sf::VideoMode::getDesktopMode().size.x / tileSize;
-        auto h = sf::VideoMode::getDesktopMode().size.y / tileSize;
-        topLeftTile = sf::Vector2i((int)(pos_.x / tileSize), (int)(pos_.y / tileSize));
-        if (topLeftTile.x < 0)
+        auto size = wnd_.getView().getSize();   // or window.getSize() if you don’t use a view
+        
+        // number of *fully covered* tiles  → add an extra 2‑tile cushion
+        unsigned w = unsigned((((unsigned)wnd_.getView().getSize().x + (unsigned)(tileSize - 1)) / (unsigned)tileSize) + 1u);   // ceil + )1
+        if (w > mapPitch) w = mapPitch;
+        
+        unsigned h = unsigned((((unsigned)wnd_.getView().getSize().y + (unsigned)(tileSize - 1)) / (unsigned)tileSize) + 1u);
+        if (h > mapHeight) h = mapHeight;
+        //unsigned w = static_cast<unsigned>(size.x) / tileSize;
+        //unsigned h = static_cast<unsigned>(size.y) / tileSize;
+
+        //auto w = sf::VideoMode::getDesktopMode().size.x / tileSize;
+        //auto h = sf::VideoMode::getDesktopMode().size.y / tileSize;
+       // topLeftTile = sf::Vector2i((int)(pos_.x / tileSize), (int)(pos_.y / tileSize));
+        topLeftTile.x = std::clamp<int>((int)(pos_.x / tileSize), 0, (int)mapPitch - int(w));
+        topLeftTile.y = std::clamp<int>((int)(pos_.y / tileSize), 0, (int)mapHeight - int(h));
+
+        bottomRightTile = { topLeftTile.x + (int)w, topLeftTile.y + (int)h };  // no “‑1” anymore
+        if (bottomRightTile.x >= (int)mapPitch)
         {
-            topLeftTile.x = 0;
+            bottomRightTile.x = (int)mapPitch;
         }
-        if (topLeftTile.y < 0)
+        if (bottomRightTile.y >= (int)mapHeight)
         {
-            topLeftTile.y = 0;
+            bottomRightTile.y = (int)mapHeight;
         }
-        if (topLeftTile.x >= (int)(mapPitch - w))
-        {
-            topLeftTile.x = (int)(mapPitch - w);
-        }
-        if (topLeftTile.y >= (int)(mapHeight - h))
-        {
-            topLeftTile.y = (int)(mapPitch - h);
-        }
-        bottomRightTile = {(int)( std::min(topLeftTile.x + (w-1), mapPitch)), (int)(std::min(topLeftTile.y + (h-1), mapHeight) )};
+
+        //bottomRightTile = {(int)( std::min(topLeftTile.x + (w-1), mapPitch - 1)), (int)(std::min(topLeftTile.y + (h-1), mapHeight - 1) )};
         auto ts = tileSize;
         sf::Texture& tex = Cfg::textures.get(textureID);
         if (currVerts.getVertexCount() != (bottomRightTile.x - topLeftTile.x) * (bottomRightTile.y - topLeftTile.y) * 6)

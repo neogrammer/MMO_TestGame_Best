@@ -1099,7 +1099,7 @@ public:
 				
 				handlePanAndZooming(dt);
 
-				tilemap1.update(tv.mapPixelToCoords({ 0,0 }));
+				tilemap1.update(tv.mapPixelToCoords({ 0,0 }), tv);
 
 				renderScene();
 
