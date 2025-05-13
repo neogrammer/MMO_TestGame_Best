@@ -1098,6 +1098,9 @@ public:
 				updateAndCollideProjectiles(dt);
 				
 				handlePanAndZooming(dt);
+
+				tilemap1.update(tv.mapPixelToCoords({ 0,0 }));
+
 				renderScene();
 
 				updateOtherClients();
