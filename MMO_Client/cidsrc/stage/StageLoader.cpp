@@ -26,6 +26,38 @@ static std::string linkTypeToString(LinkType t) {
     }
 }
 
+static Tile::Type Int32ToTileType(int32_t i) {
+    if (i == -1)   return Tile::Type::NOTILE;
+    if (i ==  0)   return Tile::Type::PASS;
+    if (i ==  1)   return Tile::Type::SOLID;
+    if (i ==  2)   return Tile::Type::TEMP;
+    if (i ==  3)   return Tile::Type::HORIZONTAL;
+    if (i ==  4)   return Tile::Type::VERTICAL;
+    if (i ==  5)   return Tile::Type::ABOVE;
+    if (i ==  6)   return Tile::Type::MNORTH;
+    if (i ==  7)   return Tile::Type::MEAST;
+    if (i ==  8)   return Tile::Type::MSOUTH;
+    if (i ==  9)   return Tile::Type::MWEST;
+    return Tile::Type::NOTILE;
+}
+static int32_t TileTypeToInt32(Tile::Type t) {
+    switch (t) {
+    case Tile::Type::NOTILE:   return -1;
+    case Tile::Type::PASS:   return 0;
+    case Tile::Type::SOLID:   return 1;
+    case Tile::Type::TEMP:   return 2;
+    case Tile::Type::HORIZONTAL:   return 3;
+    case Tile::Type::VERTICAL:   return 4;
+    case Tile::Type::ABOVE:   return 5;
+    case Tile::Type::MNORTH:   return 6;
+    case Tile::Type::MEAST:   return 7;
+    case Tile::Type::MSOUTH:   return 8;
+    case Tile::Type::MWEST:   return 9;
+    default: return -1;
+    }
+}
+
+
 
 /* ───────────────── loader ───────────────── */
 StageData StageLoader::loadFromJsonFile(const std::filesystem::path& file)
@@ -39,8 +71,30 @@ StageData StageLoader::loadFromJsonFile(const std::filesystem::path& file)
     /* basic fields */
     sd.name = j.at("name").get<std::string>();
     sd.textureID = TextureIDLUT[j.at("textureID").get<std::string>()];
-    sd.tileSize = j.value("tileSize", 50u);
+    sd.tileSize = j.value("tileSize", 64u);
     sd.revision = j.value("revision", 0u);
+
+    const auto& jt = j.at("tileset");
+    sd.tileset.width = jt.value("width", 1u);
+    sd.tileset.height = jt.value("height", 1u);
+    sd.tileset.tiles.clear();
+    sd.tileset.tiles.reserve(sd.tileset.width * sd.tileset.height);
+    const auto& jtypeRows = jt.at("type");
+
+    uint32_t index{ 0 };
+    for (const auto& row : jtypeRows) {
+        if (row.size() != sd.tileset.width)
+            throw std::runtime_error("StageLoader: row width mismatch in tileset");
+        if (jtypeRows.size() != sd.tileset.height)
+            throw std::runtime_error("StageLoader: col height mismatch in tileset");
+
+        for (auto v : row)
+        {
+            Tile& tile = sd.tileset.tiles.emplace_back(Tile{});
+            tile.index = index++;
+            tile.type = Int32ToTileType(static_cast<uint32_t>(v));
+        }
+    }
 
     /* map wrapper */
     const auto& jm = j.at("map");
@@ -54,11 +108,11 @@ StageData StageLoader::loadFromJsonFile(const std::filesystem::path& file)
 
         /* tiles */
         const auto& rows = jf.at("data");
-        f.tiles.reserve(f.width * f.height);
+        f.tileIndices.reserve(f.width * f.height);
         for (const auto& row : rows) {
             if (row.size() != f.width)
                 throw std::runtime_error("StageLoader: row width mismatch in floor " + std::to_string(f.id));
-            for (auto v : row) f.tiles.push_back(static_cast<uint16_t>(v));
+            for (auto v : row) f.tileIndices.push_back(static_cast<uint32_t>(v));
         }
         if (rows.size() != f.height)
             throw std::runtime_error("StageLoader: row count mismatch in floor " + std::to_string(f.id));
@@ -114,6 +168,28 @@ void StageLoader::saveToJsonFile(const StageData& stage, const std::filesystem::
     j["tileSize"] = stage.tileSize;
     j["revision"] = stage.revision;
 
+
+  
+    json jTileset;
+    jTileset["width"] = stage.tileset.width;
+    jTileset["height"] = stage.tileset.height;
+
+    json typeRows = json::array();
+    for (uint32_t y = 0; y < stage.tileset.height; ++y)
+    {
+        json row = json::array();
+        for (uint32_t x = 0; x < stage.tileset.width; ++x)
+        {
+            const Tile& t = stage.tileset.tiles[y * stage.tileset.width + x];
+            row.push_back(TileTypeToInt32(t.type));     // encode enum → int
+        }
+        typeRows.push_back(std::move(row));
+    }
+    jTileset["type"] = std::move(typeRows);
+
+    j["tileset"] = std::move(jTileset);
+    
+
     json jm;
     jm["defaultFloor"] = stage.map.defaultFloor;
     json floorsJson = json::array();
@@ -128,7 +204,7 @@ void StageLoader::saveToJsonFile(const StageData& stage, const std::filesystem::
         for (uint32_t y = 0; y < f.height; ++y) {
             json row = json::array();
             for (uint32_t x = 0; x < f.width; ++x)
-                row.push_back(f.tiles[y * f.width + x]);
+                row.push_back(f.tileIndices[y * f.width + x]);
             rows.push_back(std::move(row));
         }
         jf["data"] = std::move(rows);

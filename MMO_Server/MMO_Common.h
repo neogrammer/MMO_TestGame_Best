@@ -7,10 +7,13 @@ enum class GameMsg : uint32_t
 	Server_GetPing,
 	Server_GetOwnTime,
 
+
 	Client_Accepted,
 	Client_AssignID,
 	Client_RegisterWithServer,
 	Client_UnregisterWithServer,
+	Client_NumPlayers,
+	Client_GameFull,
 
 	Game_AddPlayer,
 	Game_RemovePlayer,

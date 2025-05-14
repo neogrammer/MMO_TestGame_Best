@@ -7,6 +7,29 @@
 #include <resources/Cfg.h>
 
 
+struct Tile
+{
+	enum class Type : int32_t
+	{
+		NOTILE = -1,
+		PASS = 0,
+		SOLID = 1,
+		TEMP = 2,
+		HORIZONTAL = 3,
+		VERTICAL = 4,
+		ABOVE = 5,
+		MNORTH = 6,
+		MEAST = 7,
+		MSOUTH = 8,
+		MWEST = 9
+	};
+	
+
+
+	uint32_t index{ 0 };
+	Type type{ Type::NOTILE };
+};
+
 enum class LinkType : uint8_t {               // encode however you like
 	StairsUp,
 	StairsDown,
@@ -30,15 +53,21 @@ struct Floor
 	uint32_t width{};
 	uint32_t height{};
 
-	std::vector<uint32_t> tiles;
+	std::vector<uint32_t> tileIndices;
 
 	std::vector<Link> links;
+};
+
+struct TilesetData
+{
+	uint32_t width{ 0 };
+	uint32_t height{ 0 };
+	std::vector<Tile> tiles;
 };
 
 struct MapData
 {
 	int32_t defaultFloor{ 0 };
-
 	std::vector<Floor> floors;
 };
 
@@ -63,6 +92,7 @@ struct StageData {
 	uint32_t             revision = 0;
 
 	MapData              map;                 // **by value** – no heap indirection
+	TilesetData		 tileset;
 	std::vector<SpawnPoint>  spawnPoints;
 	std::vector<Interactive> interactives;
 };

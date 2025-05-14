@@ -32,9 +32,18 @@ protected:
 		m_mapPlayerBullets[client->GetID()].clear();
 
 
-		cnet::message<GameMsg> msg;
-		msg.header.id = GameMsg::Client_Accepted;
-		client->Send(msg);
+		 if (m_mapPlayerRoster.size() >= 4)
+		 {
+			   cnet::message<GameMsg> msg;
+			   msg.header.id = GameMsg::Client_GameFull;
+			   client->Send(msg);
+		 }
+		 else 
+		 {
+				cnet::message<GameMsg> msg;
+				msg.header.id = GameMsg::Client_Accepted;
+				client->Send(msg);
+		 }
 	}
 
 	void OnClientDisconnect(std::shared_ptr<cnet::connection<GameMsg>> client) override
@@ -44,6 +53,7 @@ protected:
 			if (m_mapPlayerRoster.find(client->GetID()) == m_mapPlayerRoster.end())
 			{
 				// client never added to roster, so just let it disappear
+				std::cout << "A Client that needs to be removed apparently is not even on the roster, so fuck it" << std::endl;
 			}
 			else
 			{
@@ -71,8 +81,6 @@ protected:
 			m_vGarbageIDs.clear();
 		}
 
-
-
 		switch (msg.header.id)
 		{
 		case GameMsg::Client_RegisterWithServer:
@@ -81,17 +89,14 @@ protected:
 			msg >> desc;
 			desc.nUniqueID = client->GetID();
 			m_mapPlayerRoster.insert_or_assign(desc.nUniqueID, desc);
-
 			cnet::message<GameMsg> msgSendID;
 			msgSendID.header.id = GameMsg::Client_AssignID;
 			msgSendID << desc.nUniqueID;
 			MessageClient(client, msgSendID);
-
 			cnet::message<GameMsg> msgAddPlayer;
 			msgAddPlayer.header.id = GameMsg::Game_AddPlayer;
 			msgAddPlayer << desc;
 			MessageAllClients(msgAddPlayer);
-
 			for (const auto& player : m_mapPlayerRoster)
 			{
 				cnet::message<GameMsg> msgAddOtherPlayers;
@@ -99,52 +104,22 @@ protected:
 				msgAddOtherPlayers << player.second;
 				MessageClient(client, msgAddOtherPlayers);
 			}
-
-			break;
 		}
-
+		break;
 		case GameMsg::Client_UnregisterWithServer:
 		{
-		
-
 			break;
 		}
 
 		case GameMsg::Game_UpdatePlayer:
 		{
-			/*sPlayerDescription desc;
-			msg >> desc;
-			for (auto& p : m_mapPlayerRoster)
-			{
-				if (p.first == desc.nUniqueID)
-				{
-					cnet::message<GameMsg> msgUpdatePlayer;
-					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
-					msgUpdatePlayer << desc;*/
 			MessageAllClients(msg, client);
-
-			
-		
-			//		}
-				//}
-				// Simply bounce update to everyone except incoming client
-		
 			break;
 		}
 
 
 		case GameMsg::Game_AddBullet:
 		{
-			/*sPlayerDescription desc;
-			msg >> desc;
-			for (auto& p : m_mapPlayerRoster)
-			{
-				if (p.first == desc.nUniqueID)
-				{
-					cnet::message<GameMsg> msgUpdatePlayer;
-					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
-					msgUpdatePlayer << desc;*/
-
 			BulletDescription desc;
 			msg >> desc;
 			m_mapPlayerBullets[client->GetID()].push_back(desc);
@@ -155,25 +130,11 @@ protected:
 			msgAddBullet << desc;
 
 			MessageAllClients(msgAddBullet, client);
-
-			//		}
-				//}
-				// Simply bounce update to everyone except incoming client
-
 			break;
 		}
 
 		case GameMsg::Game_RemoveBullet:
 		{
-			/*sPlayerDescription desc;
-			msg >> desc;
-			for (auto& p : m_mapPlayerRoster)
-			{
-				if (p.first == desc.nUniqueID)
-				{
-					cnet::message<GameMsg> msgUpdatePlayer;
-					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
-					msgUpdatePlayer << desc;*/
 			BulletDescription desc;
 			msg >> desc;
 			
@@ -185,67 +146,17 @@ protected:
 			msgRemoveBullet << desc;
 
 			MessageAllClients(msgRemoveBullet, client);
-
-
-			//		}
-				//}
-				// Simply bounce update to everyone except incoming client
-
 			break;
 		}
 
 		case GameMsg::Game_UpdateBullet:
 		{
-			/*sPlayerDescription desc;
-			msg >> desc;
-			for (auto& p : m_mapPlayerRoster)
-			{
-				if (p.first == desc.nUniqueID)
-				{
-					cnet::message<GameMsg> msgUpdatePlayer;
-					msgUpdatePlayer.header.id = GameMsg::Game_UpdatePlayer;
-					msgUpdatePlayer << desc;*/
-
-
 			MessageAllClients(msg, client);
-
-			//		}
-				//}
-				// Simply bounce update to everyone except incoming client
-
 			break;
 		}
 
 		case GameMsg::Server_GetPing:
 		{
-	/*		TimeSync ts;
-			msg >> ts;
-
-			ts.timeReachingServer = std::chrono::system_clock::now();
-
-			cnet::message<GameMsg> newMsg;
-			newMsg.header.id = GameMsg::Server_GetOwnTime;
-
-			newMsg << ts;
-
-			MessageClient(client, newMsg);
-
-			for (auto& player : m_mapPlayerRoster)
-			{
-				TimePlayer tp{};
-				tp.ts = ts;
-				auto pID = player.first;
-				tp.id = pID;
-				
-				cnet::message<GameMsg> outMsg;
-
-				outMsg.header.id = GameMsg::Server_GetPing;
-				outMsg << tp;
-				
-				MessageAllClients(newMsg, client);
-			}*/
-
-
 		}
 		break;
 		}
