@@ -16,7 +16,7 @@ std::string AnimObject::loadInFile(std::string animFile_)
 {
 
 	std::ifstream iFile;
-	iFile.open("Config/Animations/" + animFile_);
+	iFile.open("C:/Users/jlhar/OneDrive/Desktop/VS_PJX/GameDevPackage/MMO_TestGame/MMO_Client/assets/data/" + animFile_);
 
 	if (!iFile.is_open() || !iFile.good())
 		return std::string{ R"(Unable to open the file at location : $(ProjectDir)Config/Animations/)" } + animFile_;

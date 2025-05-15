@@ -1,16 +1,15 @@
-
 #ifndef PLAYER_H__
 #define PLAYER_H__
 
-//#include "AnimObject.h"
+#include "AnimObject.h"
 //#include <animation/PlayerAnimFSM.h>
 //#include <game_objects/BusterShot.h>
 //#include <stack>
 //#include <memory>
 //#include <utility>
 //
-//class Player : public AnimObject
-//{
+class Player : public AnimObject
+{
 //	friend class Physics;
 //	friend class PlayState;
 //	float bgLowBoundX{ 800.f };
@@ -61,15 +60,15 @@
 //
 //	FSM_Player fsm;
 //	
-//public:
-//	using AnimObject::AnimObject;
-//	Player();
-//	virtual ~Player() override final;
+public:
+	using AnimObject::AnimObject;
+	Player(sf::Vector2f pos_ = { 300.f,300.f });
+	virtual ~Player() override final;
 //	void renderBullets(sf::RenderWindow& wnd_);
 //	void shoot();
-//	void handleInput() override final;
-//	void update(float dt_) override final;
-//	void finalize(float dt_, sf::RenderWindow& wnd_) override final;
+	void handleInput() override final;
+	void update(float dt_) override final;
+	void finalize(float dt_, sf::RenderWindow& wnd_) override final;
 //
 //	void setBGSize(float lx_, float hx_, float ly_, float hy_);
 //
@@ -80,6 +79,6 @@
 //
 //public:
 //
-//};
+};
 
 #endif

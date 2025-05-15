@@ -8,6 +8,7 @@
 #include <stage/StageLoader.h>
 #include <stage/Tilemap.h>
 #include <nlohmann/json.hpp>
+#include <game_objects/Player.h>
 
 using json = nlohmann::json;
 using namespace StageLoader;
@@ -38,6 +39,8 @@ bool isMyWindowInFocus(sf::RenderWindow& wnd_)
 
 class MMOGame : cnet::client_interface<GameMsg>
 {
+
+	Player player{};
 	std::unique_ptr<StageData> currStage;
 	std::unique_ptr<sf::Texture> currTileset;
 	std::vector<sf::IntRect> tileRects;
@@ -54,21 +57,7 @@ class MMOGame : cnet::client_interface<GameMsg>
 	TileMap tilemap1;
 	
 	std::map<uint32_t, sPlayerDescription> mapObjects;
-	std::map<AnimDir, std::vector<sf::IntRect>> walkAnim
-	{
-		{AnimDir::N, std::vector<sf::IntRect>{ {{0*74,0*70},{74,70}}, {{1*74,0*70},{74,70}}, {{2*74,0*70},{74,70}}, {{3*74,0*70},{74,70} } }},
-		{AnimDir::NE, std::vector<sf::IntRect>{ {{0 * 74,1 * 70},{74,70}}, {{1 * 74,1 * 70},{74,70}}, {{2 * 74,1 * 70},{74,70}}, {{3 * 74,1 * 70},{74,70} } }},
-		{AnimDir::E, std::vector<sf::IntRect>{ {{0 * 74,2 * 70},{74,70}}, {{1 * 74,2 * 70},{74,70}}, {{2 * 74,2 * 70},{74,70}}, {{3 * 74,2 * 70},{74,70} } }},
-		{AnimDir::SE, std::vector<sf::IntRect>{ {{0 * 74,3 * 70},{74,70}}, {{1 * 74,3 * 70},{74,70}}, {{2 * 74,3 * 70},{74,70}}, {{3 * 74,3 * 70},{74,70} } }},
-		{AnimDir::S, std::vector<sf::IntRect>{ {{0 * 74,4 * 70},{74,70}}, {{1 * 74,4 * 70},{74,70}}, {{2 * 74,4 * 70},{74,70}}, {{3 * 74,4 * 70},{74,70} } }},
-		{AnimDir::SW, std::vector<sf::IntRect>{ {{0 * 74,5 * 70},{74,70}}, {{1 * 74,5 * 70},{74,70}}, {{2 * 74,5 * 70},{74,70}}, {{3 * 74,5 * 70},{74,70} } }},
-		{AnimDir::W, std::vector<sf::IntRect>{ {{0 * 74,6 * 70},{74,70}}, {{1 * 74,6 * 70},{74,70}}, {{2 * 74,6 * 70},{74,70}}, {{3 * 74,6 * 70},{74,70} } }},
-		{AnimDir::NW, std::vector<sf::IntRect>{ {{0 * 74,7 * 70},{74,70}}, {{1 * 74,7 * 70},{74,70}}, {{2 * 74,7 * 70},{74,70}}, {{3 * 74,7 * 70},{74,70} } }}
-	};
-	float animDelay{ 0.13f };
-	bool playing{ false };
-	uint32_t currentFrame = 0;
-	AnimDir currentDir = AnimDir::S;
+
 
 	void startPan(sf::RenderWindow& wnd_, sf::Vector2i startPos_)
 	{
@@ -967,7 +956,6 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 		tv.draw(nameText);
 		tv.setView(vw);
 
-		tv.display();
 
 	}
 
@@ -1062,7 +1050,8 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 		// Check for incoming network messages
 		if (IsConnected())
 		{
-
+			player.setPosition(object.pos);
+			player.setVelocity(object.vel);
 
 
 			while (bool stillWaiting = handleNewClientMessages()) {};
@@ -1090,13 +1079,23 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 					handleMyStaticInput(dt);
 
 					updateAndCollidePlayers(dt, tilemap1);
+					player.setPosition({ object.pos.x * tileSize,object.pos.y * tileSize });
+					player.setVelocity(object.vel);
+
 					updateAndCollideProjectiles(dt, tilemap1);
 
 					handlePanAndZooming(dt);
 
 					tilemap1.update(tv.mapPixelToCoords({ 0,0 }), tv);
 
+					player.finalize(dt, tv);
+
 					renderScene();
+
+					tv.draw(player);
+
+
+					tv.display();
 
 					updateOtherClients();
 				}

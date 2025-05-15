@@ -1,8 +1,9 @@
-#ifndef ANIMMGR_H__
+﻿#ifndef ANIMMGR_H__
 #define ANIMMGR_H__
 
 #include <animation/Animation.h>
 #include <resources/Cfg.h>
+#include <MMO_Common.h>
 #include <map>
 
 class AnimMgr
@@ -24,6 +25,14 @@ public:
 	AnimMgr(AnimMgr&&) = delete;
 	AnimMgr& operator=(AnimMgr&&) = delete;
 
+
+	// Returns nullptr if the animation isn’t present
+	const Animation* getAnimationIfExists(AnimName name) const noexcept;
+	Animation* getAnimationIfExists(AnimName name)       noexcept;
+
+	/** Add or replace an animation definition. 
+	 *  Takes by value so we can std::move from r‑values. */
+	void setAnimation(AnimName name, Animation anim);
 
 	void allocateAnim(AnimName name_, Cfg::Textures  texID_, int numFrames_, float frameDelay_, bool loops_, bool loopWaits_, float loopWaitDelay);
 	AnimDir getCurrDir();

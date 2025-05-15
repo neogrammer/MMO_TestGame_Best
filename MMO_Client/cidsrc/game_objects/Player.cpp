@@ -1,24 +1,29 @@
 #include "Player.h"
 //#include <animation/DuckFold.h>
-//#include <iostream>
-//Player::Player()
-//	: AnimObject{ Cfg::Textures::MegaManSheet1x48x48x1,{{0,160}, { 130,160 }},{50.f,50.f}, {49.f,79.f},{300.f,300.f} }
+#include <iostream>
+Player::Player(sf::Vector2f pos_)
+	: AnimObject{ Cfg::Textures::PlayerAtlas,{{0,0}, { 74, 70 }},{0.f,0.f}, {74.f,70.f}, pos_ }
 //	, projectiles{}
-//{
-//	setPosition({ 300.f,600.f });
-//	setTexRect({ {0,160},{130,160} });
-//	//currWorldSize = {49.f,79.f};
+{
+	setPosition(pos_);
+	setTexRect({ {0,0},{74,70} });
+	currWorldSize = {74.f,70.f};
 //
-//	loadInFile("Player.anim");
-//	//animMgr.switchAnim(AnimName::Shooting, AnimDir::Right);
-//	//setWorldSize({ 49.f,79.f });
+	std::string pass = loadInFile("player.anim");
+
+	if (pass != "OK")
+	{
+		std::cout << "\nPlayer Animation file not loaded in properly" << std::endl;
+	}
+	animMgr.switchAnim(AnimName::Idle, AnimDir::Down);
+	setWorldSize({ 74.f,70.f });
 //
 //	projectiles.clear();
-//}
+}
 //
-//Player::~Player()
-//{
-//}
+Player::~Player()
+{
+}
 //
 //void Player::renderBullets(sf::RenderWindow& wnd_)
 //{
@@ -74,8 +79,8 @@
 //
 //}
 //
-//void Player::handleInput()
-//{
+void Player::handleInput()
+{
 //
 //	// running logic
 //
@@ -246,7 +251,7 @@
 //
 //	}
 //
-//}
+}
 //
 //void Player::shoot()
 //{
@@ -278,8 +283,8 @@
 //
 //}
 //
-//void Player::update(float dt_)
-//{
+void Player::update(float dt_)
+{
 //	
 //
 //	if (shootCoolingDown)
@@ -359,130 +364,142 @@
 //
 //	//}
 //
+}
+//
+void Player::finalize(float dt_, sf::RenderWindow& wnd_)
+{
+	//
+	//	if (fsm.getStateName() == "RisingAndShooting" && velocity.y > 0.f)
+	//	{
+	//		dispatch(fsm, EventFell{});
+	//
+	//
+	//	}
+	//
+	//	// checks if the direction or animation needs to change then update the animation for either one changing, changing the direction first and using that in the anim switch
+	//
+	//	bool playerFacingRight{};
+	//	bool playerFacingRightAfter{};
+	//auto nameBefore = animMgr.getCurrAnimName();
+	//auto dirBefore = animMgr.getCurrDir();
+	//	if (dirBefore == AnimDir::Right)
+	//		playerFacingRight = true;
+	//	else if (dirBefore == AnimDir::Left)
+	//		playerFacingRight = false;
+	//AnimDir dirAfter{ dirBefore };
+	//
+	//	if (dirAfter == AnimDir::Right)
+	//		playerFacingRightAfter = true;
+	//	else if (dirAfter == AnimDir::Left)
+	//		playerFacingRightAfter = false;
+	//
+	//auto nameAfter = animMgr.getCurrAnimName();
+	//
+	//
+	//	if (playerFacingRight != playerFacingRightAfter)
+	//	{
+	//		if (playerFacingRightAfter == true)
+	//		{
+	//			animMgr.setCurrDir(AnimDir::Right);
+	//		}
+	//		else
+	//		{
+	//			animMgr.setCurrDir(AnimDir::Left);
+	//		}
+	//	}
+	//
+	//auto finalDir = animMgr.getCurrDir();
+
+	//if (FSMStateNameLUT.find(nameBefore) != FSMStateNameLUT.end() && FSMStateNameLUT.find(nameAfter) != FSMStateNameLUT.end())
+	//{
+
+		//if (nameBefore != nameAfter || finalDir != dirBefore)
+	//	{
+	//		animMgr.switchAnim(nameAfter, finalDir);
+	//		setTexID(animMgr.getTexID());
+	//		animMgr.reset();
+	//	}
+	animMgr.animate(dt_);
+	setTexID(Cfg::Textures::PlayerAtlas);
+	setTexRect(animMgr.getTexRect());
+	
+}
+
+	//
+	//
+	//
+	//
+	//
+	//	// now check position and velocity of player and move the screen instead when in middle of it moving in a direction until the end of the level then move the player
+	//	auto vw = wnd_.getView();
+	//	if (rightPressed)
+	//	{
+	//		//velocity.x = 300.f;
+	//		// if player is going to be still on the left side of screen after moving, then move the player
+	//		if (getPosition().x + velocity.x * dt_ < bgLowBoundX || vw.getCenter().x >= bgHighBoundX)
+	//		{
+	//			move({ velocity.x * dt_, 0.f });
+	//		}
+	//		else // move the player to the center, move the view instead by (playerPosition if moved - view.getCenter) * dt_
+	//		{
+	//			vw.move({ (getPosition().x + velocity.x * dt_) - vw.getCenter().x, 0.f });
+	//			wnd_.setView(vw);
+	//			setPosition({ wnd_.mapPixelToCoords({(int)bgLowBoundX,(int)bgLowBoundY}).x, getPosition().y});
+	//		}
+	//	}
+	//	else if (leftPressed)
+	//	{
+	//		//velocity.x = -300.f;
+	//		// if player is going to be still on the left side of screen after moving, then move the player
+	//		if (getPosition().x + velocity.x * dt_ > bgHighBoundX || vw.getCenter().x <= bgLowBoundX)
+	//		{
+	//			move({ velocity.x * dt_, 0.f });
+	//		}
+	//		else // move the player to the center, move the view instead by (playerPosition if moved - view.getCenter) * dt_
+	//		{
+	//			vw.move({ (getPosition().x + velocity.x * dt_) - (vw.getCenter().x) , 0.f });
+	//			wnd_.setView(vw);
+	//			setPosition({ wnd_.mapPixelToCoords({(int)bgLowBoundX,(int)bgLowBoundY}).x, getPosition().y });
+	//		}
+	//	}
+	//
+	//	// we set the x above with the screen movement, not adjust the player for the y value
+	//	// apply y velocity
+	//	setPosition({ getPosition().x, getPosition().y + (getVelocity().y * dt_) });
+	//
+	//	// Now make a nbullet if needed
+	//	if (makeBulletFixed)
+	//	{
+	//		makeBulletFixed = false;
+	//		projectiles.push_back(std::make_shared<BusterShot>(this, Cfg::Textures::BusterShot, sf::IntRect{ sf::Vector2i{0,0},sf::Vector2i{24,14} }, sf::Vector2f{ 0.f,0.f }, sf::Vector2f{ 24.f,14.f }, sf::Vector2f{ getPosition().x + animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), (int)animMgr.getCurrIndex()).x, getPosition().y + animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), (int)animMgr.getCurrIndex()).y }));
+	//		//projectiles.back()->setPosition({ getPosition().x + (animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).x - getPosition().x),getPosition().y + (animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).y - getPosition().y) });
+	//		if (animMgr.getCurrDir() == AnimDir::Right)
+	//		{
+	//			projectiles.back()->setVelocity({ 700.f, 0.f });
+	//		}
+	//		else
+	//		{
+	//			projectiles.back()->setVelocity({ -700.f,0.f });
+	//		}
+	//		std::cout << "PlayerPosition: x= " << getPosition().x << ", y= " << getPosition().y << "\n>>>  TexOffset: x= " << getCurrOffset().x << ", y= " << getCurrOffset().y << "\n>>> AnchorPointRelative: x= " << animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).x << ", y= " << animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).y << " \nFinalPositionBullet: x= " << projectiles.back()->getPosition().x << ", y= " << projectiles.back()->getPosition().y << std::endl;
+	//
+	//
+	//	}
+	//
+	//
+	// 
+
+	//	// now that our position is finalized, lets animate the frame then update the texture rect
+	//const auto& r = animMgr.currFrame();
+	//animMgr.animate(dt_);
+	//if (r != animMgr.currFrame())
+	//{
+	//	// frame changed
+	//	setTexRect(animMgr.currFrame());
+	//}
 //}
-//
-//void Player::finalize(float dt_, sf::RenderWindow& wnd_)
-//{
-//
-//	if (fsm.getStateName() == "RisingAndShooting" && velocity.y > 0.f)
-//	{
-//		dispatch(fsm, EventFell{});
-//
-//
-//	}
-//
-//	// checks if the direction or animation needs to change then update the animation for either one changing, changing the direction first and using that in the anim switch
-//
-//	bool playerFacingRight{};
-//	bool playerFacingRightAfter{};
-//	auto nameBefore = animMgr.getCurrAnimName();
-//	auto dirBefore = animMgr.getCurrDir();
-//	if (dirBefore == AnimDir::Right)
-//		playerFacingRight = true;
-//	else if (dirBefore == AnimDir::Left)
-//		playerFacingRight = false;
-//	AnimDir dirAfter{ dirBefore };
-//
-//	if (dirAfter == AnimDir::Right)
-//		playerFacingRightAfter = true;
-//	else if (dirAfter == AnimDir::Left)
-//		playerFacingRightAfter = false;
-//
-//	auto nameAfter = fsm.getStateName();
-//
-//
-//	if (playerFacingRight != playerFacingRightAfter)
-//	{
-//		if (playerFacingRightAfter == true)
-//		{
-//			animMgr.setCurrDir(AnimDir::Right);
-//		}
-//		else
-//		{
-//			animMgr.setCurrDir(AnimDir::Left);
-//		}
-//	}
-//
-//	auto finalDir = animMgr.getCurrDir();
-//
-//	if (FSMStateNameLUT[nameBefore] != nameAfter || finalDir != dirBefore)
-//	{
-//		animMgr.switchAnim(AnimNameLUT[nameAfter], finalDir);
-//		setTexID(animMgr.getTexID());
-//		animMgr.reset();
-//
-//
-//	}
-//
-//
-//
-//
-//
-//	// now check position and velocity of player and move the screen instead when in middle of it moving in a direction until the end of the level then move the player
-//	auto vw = wnd_.getView();
-//	if (rightPressed)
-//	{
-//		//velocity.x = 300.f;
-//		// if player is going to be still on the left side of screen after moving, then move the player
-//		if (getPosition().x + velocity.x * dt_ < bgLowBoundX || vw.getCenter().x >= bgHighBoundX)
-//		{
-//			move({ velocity.x * dt_, 0.f });
-//		}
-//		else // move the player to the center, move the view instead by (playerPosition if moved - view.getCenter) * dt_
-//		{
-//			vw.move({ (getPosition().x + velocity.x * dt_) - vw.getCenter().x, 0.f });
-//			wnd_.setView(vw);
-//			setPosition({ wnd_.mapPixelToCoords({(int)bgLowBoundX,(int)bgLowBoundY}).x, getPosition().y});
-//		}
-//	}
-//	else if (leftPressed)
-//	{
-//		//velocity.x = -300.f;
-//		// if player is going to be still on the left side of screen after moving, then move the player
-//		if (getPosition().x + velocity.x * dt_ > bgHighBoundX || vw.getCenter().x <= bgLowBoundX)
-//		{
-//			move({ velocity.x * dt_, 0.f });
-//		}
-//		else // move the player to the center, move the view instead by (playerPosition if moved - view.getCenter) * dt_
-//		{
-//			vw.move({ (getPosition().x + velocity.x * dt_) - (vw.getCenter().x) , 0.f });
-//			wnd_.setView(vw);
-//			setPosition({ wnd_.mapPixelToCoords({(int)bgLowBoundX,(int)bgLowBoundY}).x, getPosition().y });
-//		}
-//	}
-//
-//	// we set the x above with the screen movement, not adjust the player for the y value
-//	// apply y velocity
-//	setPosition({ getPosition().x, getPosition().y + (getVelocity().y * dt_) });
-//
-//	// Now make a nbullet if needed
-//	if (makeBulletFixed)
-//	{
-//		makeBulletFixed = false;
-//		projectiles.push_back(std::make_shared<BusterShot>(this, Cfg::Textures::BusterShot, sf::IntRect{ sf::Vector2i{0,0},sf::Vector2i{24,14} }, sf::Vector2f{ 0.f,0.f }, sf::Vector2f{ 24.f,14.f }, sf::Vector2f{ getPosition().x + animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), (int)animMgr.getCurrIndex()).x, getPosition().y + animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), (int)animMgr.getCurrIndex()).y }));
-//		//projectiles.back()->setPosition({ getPosition().x + (animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).x - getPosition().x),getPosition().y + (animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).y - getPosition().y) });
-//		if (animMgr.getCurrDir() == AnimDir::Right)
-//		{
-//			projectiles.back()->setVelocity({ 700.f, 0.f });
-//		}
-//		else
-//		{
-//			projectiles.back()->setVelocity({ -700.f,0.f });
-//		}
-//		std::cout << "PlayerPosition: x= " << getPosition().x << ", y= " << getPosition().y << "\n>>>  TexOffset: x= " << getCurrOffset().x << ", y= " << getCurrOffset().y << "\n>>> AnchorPointRelative: x= " << animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).x << ", y= " << animMgr.getBulletPoint(AnimName::Shooting, animMgr.getCurrDir(), 0).y << " \nFinalPositionBullet: x= " << projectiles.back()->getPosition().x << ", y= " << projectiles.back()->getPosition().y << std::endl;
-//
-//
-//	}
-//
-//
-//	// now that our position is finalized, lets animate the frame then update the texture rect
-//	animMgr.animate(dt_);
-//	//	if (r != animMgr.currFrame())
-//	//	{
-//			// frame changed
-//	setTexRect(animMgr.currFrame());
-//}
-//
+
+
 //void Player::setBGSize(float lx_, float hx_, float ly_, float hy_)
 //{
 //	bgLowBoundX = lx_;

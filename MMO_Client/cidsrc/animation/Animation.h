@@ -7,6 +7,7 @@
 #include <SFML/System/Vector2.hpp>
 #include <string>
 #include <resources/Cfg.h>
+#include <MMO_Common.h>
 
 
 extern std::unordered_map<std::string, AnimName> AnimNameLUT;

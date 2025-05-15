@@ -25,6 +25,24 @@ void AnimMgr::allocateAnim(AnimName name_, Cfg::Textures  texID_, int numFrames_
 	animMap[name_].transientState = AnimState::Playing;
 }
 
+const Animation* AnimMgr::getAnimationIfExists(AnimName name) const noexcept
+{
+	auto it = animMap.find(name);
+	return (it == animMap.end()) ? nullptr : &it->second;
+}
+
+Animation* AnimMgr::getAnimationIfExists(AnimName name) noexcept
+{
+	auto it = animMap.find(name);
+	return (it == animMap.end()) ? nullptr : &it->second;
+}
+
+void AnimMgr::setAnimation(AnimName name, Animation anim)
+{
+	animMap[name] = std::move(anim);
+}
+
+
 AnimDir AnimMgr::getCurrDir()
 {
 	return currDir;

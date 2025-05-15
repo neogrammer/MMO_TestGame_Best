@@ -22,10 +22,24 @@ enum class GameMsg : uint32_t
 	Game_RemoveBullet,
 	Game_UpdateBullet
 };
+//
+//enum class AnimDir
+//{
+//	Up, NE, E, SE, S, SW, W, NW
+//};
+
 
 enum class AnimDir
 {
-	N,NE,E,SE,S,SW,W,NW
+	Up,
+	Down,
+	Left,
+	Right,
+	UpRight,
+	UpLeft,
+	DownLeft,
+	DownRight,
+	Invariant
 };
 
 
@@ -44,7 +58,7 @@ struct sPlayerDescription
 	sf::Vector2f vPos = { 0.f,0.f };
 	sf::Vector2f vVel = {0.f,0.f};
 
-	AnimDir dir = AnimDir::S;
+	AnimDir dir = AnimDir::Down;
 	uint32_t currFrame = 0;
 
 

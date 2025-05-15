@@ -77,7 +77,7 @@
     <IncludePath>C:\sdks\sfml3\include;C:\sdks\asio-1.30.2\include;C:\Users\jlhar\OneDrive\Desktop\VS_PJX\MMO_NETCOMMON_Master\NetCommon;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\sfml3\include;$(SolutionDir)..\asio-1.30.2\include;$(SolutionDir)..\NetCommon;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)MMO_Server;$(SolutionDir)..\sfml3\include;$(SolutionDir)..\asio-1.30.2\include;$(SolutionDir)..\NetCommon;$(IncludePath)</IncludePath>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -169,6 +169,7 @@
     <ClInclude Include="cidsrc\game_objects\Player.h" />
     <ClInclude Include="cidsrc\game_objects\Projectile.h" />
     <ClInclude Include="cidsrc\handlers\AnimMgr.h" />
+    <ClInclude Include="cidsrc\json\JsonAnimIO.h" />
     <ClInclude Include="cidsrc\resources\Cfg.h" />
     <ClInclude Include="cidsrc\resources\ResourceMgr.h" />
     <ClInclude Include="cidsrc\stage\Stage.h" />
@@ -183,6 +184,7 @@
     <Image Include="assets\textures\tilesets\stage_1_tileset.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\data\player.anim" />
     <None Include="assets\data\stage_1.json" />
   </ItemGroup>
   <ItemGroup>
@@ -194,6 +196,7 @@
     <ClCompile Include="cidsrc\game_objects\Player.cpp" />
     <ClCompile Include="cidsrc\game_objects\Projectile.cpp" />
     <ClCompile Include="cidsrc\handlers\AnimMgr.cpp" />
+    <ClCompile Include="cidsrc\json\JsonAnimIO.cpp" />
     <ClCompile Include="cidsrc\resources\Cfg.cpp" />
     <ClCompile Include="cidsrc\stage\Stage.cpp" />
     <ClCompile Include="cidsrc\stage\StageLoader.cpp" />

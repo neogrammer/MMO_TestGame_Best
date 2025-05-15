@@ -18,4 +18,5 @@ public:
 	virtual void finalize(float dt_, sf::RenderWindow& wnd_) override = 0;
 	virtual void getHit(int power) override {}
 	std::string loadInFile(std::string animFile_);
+	
 };

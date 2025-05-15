@@ -39,6 +39,9 @@
     <Filter Include="cidsrc\animation">
       <UniqueIdentifier>{3f42b992-711a-4d60-8260-1f8e0ff9db2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cidsrc\json">
+      <UniqueIdentifier>{d80e88b2-5574-4d69-8945-1851039c38ae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="olcPGEX_Network.h">
@@ -110,6 +113,9 @@
     <ClInclude Include="cidsrc\animation\PlayerAnimStates.h">
       <Filter>cidsrc\animation</Filter>
     </ClInclude>
+    <ClInclude Include="cidsrc\json\JsonAnimIO.h">
+      <Filter>cidsrc\json</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\tilesets\stage_1_tileset.png">
@@ -121,6 +127,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\data\stage_1.json">
+      <Filter>assets\data</Filter>
+    </None>
+    <None Include="assets\data\player.anim">
       <Filter>assets\data</Filter>
     </None>
   </ItemGroup>
@@ -163,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="cidsrc\animation\FSMEvent.cpp">
       <Filter>cidsrc\animation</Filter>
+    </ClCompile>
+    <ClCompile Include="cidsrc\json\JsonAnimIO.cpp">
+      <Filter>cidsrc\json</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
