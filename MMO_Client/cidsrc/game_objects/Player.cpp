@@ -84,62 +84,200 @@ void Player::handleInput()
 //
 //	// running logic
 //
-//	rightReleased = false;
-//	leftReleased = false;
-//	jumpReleased = false;
-//	shootReleased = false;
-//
-//	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) && rightPressed)
-//	{
-//		rightReleased = true;
-//		if (!leftPressed)
-//			dispatch(fsm, EventStoppedMoving{});
-//	}
-//
-//
-//	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) && leftPressed)
-//	{
-//		leftReleased = true;
-//		if (!rightPressed)
-//			dispatch(fsm, EventStoppedMoving{});
-//	}
-//
-//
-//	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space) && jumpPressed)
-//	{
-//		jumpReleased = true;
-//		dispatch(fsm, EventJumpReleased{});
-//	}
-//
-//
-//	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter) && shootPressed)
-//	{
-//		shootReleased = true;
-//	}
-//
-//	jumpPressed = false;
-//	shootPressed = false;
-//	rightPressed = false;
-//	leftPressed = false;
-//
-//	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right))
-//	{
-//		rightPressed = true;
-//		velocity.x = 300.f;
-//		dispatch(fsm, EventMoved{});
-//		animMgr.setCurrDir(AnimDir::Right);
-//	}
-//
-//
-//	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left))
-//	{
-//		leftPressed = true;
-//		velocity.x = -300.f;
-//		dispatch(fsm, EventMoved{});
-//		animMgr.setCurrDir(AnimDir::Left);
-//
-//
-//	}
+
+	bool paint = false;
+	startDir = animMgr.getCurrDir();
+
+	rightReleased = false;
+	leftReleased = false;
+	upReleased = false;
+	downReleased = false;
+
+	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D) && rightPressed)
+	{
+		rightReleased = true;
+		paint = true;
+		//if (!leftPressed)
+			//dispatch(fsm, EventStoppedMoving{});
+	}
+
+
+	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A) && leftPressed)
+	{
+		leftReleased = true;
+		paint = true;
+
+		//if (!rightPressed)
+			//dispatch(fsm, EventStoppedMoving{});
+	}
+
+	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W) && upPressed)
+	{
+		upReleased = true;
+		paint = true;
+
+		//if (!downPressed)
+			//dispatch(fsm, EventStoppedMoving{});
+	}
+
+
+	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S) && downPressed)
+	{
+		downReleased = true;
+		paint = true;
+
+		//if (!upPressed)
+			//dispatch(fsm, EventStoppedMoving{});
+	}
+
+
+	
+
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+	{
+		if (!rightPressed)
+		{
+			rightPressed = true;
+			paint = true;
+
+			//velocity.x = 300.f;
+			//dispatch(fsm, EventMoved{});
+			animMgr.setCurrDir(AnimDir::Right);
+		}
+	}
+	else
+	{
+		rightPressed = false;
+
+	}
+
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+	{
+		if (!leftPressed)
+		{
+			leftPressed = true;
+			paint = true;
+
+			//velocity.x = -300.f;
+			//dispatch(fsm, EventMoved{});
+			animMgr.setCurrDir(AnimDir::Left);
+		}
+
+
+	}
+	else
+	{
+		leftPressed = false;
+	}
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+	{
+		if (!upPressed)
+		{
+			paint = true;
+
+
+			if (leftPressed)
+			{
+				animMgr.setCurrDir(AnimDir::UpLeft);
+			}
+			else if (rightPressed)
+			{
+				animMgr.setCurrDir(AnimDir::UpRight);
+
+			}
+			else
+			{
+				animMgr.setCurrDir(AnimDir::Up);
+			}
+
+			upPressed = true;
+		}
+
+		//velocity.y = -300.f;
+		//dispatch(fsm, EventMoved{});
+		
+
+	}
+	else
+	{
+		upPressed = false;
+	}
+
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+	{
+		if (!downPressed)
+		{
+
+			paint = true;
+
+			if (leftPressed)
+			{
+				animMgr.setCurrDir(AnimDir::DownLeft);
+			}
+			else if (rightPressed)
+			{
+				animMgr.setCurrDir(AnimDir::DownRight);
+
+			}
+			else
+			{
+				animMgr.setCurrDir(AnimDir::Down);
+			}
+
+			downPressed = true;
+		}
+		//velocity.y = 300.f;
+		//dispatch(fsm, EventMoved{});
+		
+
+	}
+	else
+	{
+		downPressed = false;
+	}
+
+	//paint = true;
+	//if (paint)
+	//{
+	//	if (leftPressed)
+	//	{
+	//		std::cout << "\nLeftPressed";
+	//	}
+	//	if (rightPressed)
+	//	{
+	//		std::cout << "\nRightPressed";
+	//	}
+	//	if (upPressed)
+	//	{
+	//		std::cout << "\nUpPressed";
+	//	}
+	//	if (downPressed)
+	//	{
+	//		std::cout << "\nDownPressed";
+	//	}
+	//	if (leftReleased)
+	//	{
+	//		std::cout << "\nLeftReleased";
+	//	}
+	//	if (rightReleased)
+	//	{
+	//		std::cout << "\nRightReleased";
+	//	}
+	//	if (upReleased)
+	//	{
+	//		std::cout << "\nUpReleased";
+	//	}
+	//	if (downReleased)
+	//	{
+	//		std::cout << "\nDownReleased";
+	//	}
+	//	//std::cout << std::endl;
+	//}
+
 //
 //
 //	if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
@@ -419,8 +557,18 @@ void Player::finalize(float dt_, sf::RenderWindow& wnd_)
 	//		setTexID(animMgr.getTexID());
 	//		animMgr.reset();
 	//	}
+
+
+
+	if (startDir != animMgr.getCurrDir())
+	{
+		animMgr.switchAnim(animMgr.getCurrAnimName(), animMgr.getCurrDir());
+		animMgr.reset();
+		startDir = animMgr.getCurrDir();
+	}
+
 	animMgr.animate(dt_);
-	setTexID(Cfg::Textures::PlayerAtlas);
+	
 	setTexRect(animMgr.getTexRect());
 	
 }

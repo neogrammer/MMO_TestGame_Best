@@ -36,6 +36,7 @@ public:
 
 	void allocateAnim(AnimName name_, Cfg::Textures  texID_, int numFrames_, float frameDelay_, bool loops_, bool loopWaits_, float loopWaitDelay);
 	AnimDir getCurrDir();
+	void setIndex(uint32_t idx_) { currIndex = (int)idx_; }
 	void setCurrDir(AnimDir dir_);
 	int getNumAnims();
 	void AddLeftFrames(AnimName name_, Cfg::Textures texID_, int numFrames_, int numRows_, int startCol_, int startRow_, int pitch_,

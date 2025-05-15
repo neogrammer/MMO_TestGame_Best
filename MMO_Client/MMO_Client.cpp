@@ -1087,7 +1087,7 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 				{
 
 					handleMyStaticInput(dt);
-
+					player.handleInput();
 					updateAndCollidePlayers(dt, tilemap1);
 					player.setPosition({ object.pos.x * tileSize,object.pos.y * tileSize });
 					player.setVelocity(object.vel);
@@ -1105,13 +1105,30 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 					player.render(tv);
 
 					// draw other players
+					Player tmpPlayer;
 					for (auto& user : mapObjects)
 					{
+						
+
 						if (user.first == object.ownerID) continue;
+
+						tmpPlayer.animMgr.setCurrDir((AnimDir)user.second.dir);
+						tmpPlayer.animMgr.switchAnim(AnimName::Idle, tmpPlayer.animMgr.getCurrDir());
+						tmpPlayer.animMgr.reset();
+						tmpPlayer.setPosition({ user.second.vPos.x * tileSize, user.second.vPos.y * tileSize });
+						tmpPlayer.animMgr.setIndex(user.second.currFrame);
+						tmpPlayer.setTexRect({ {(int) user.second.texRectLeft, (int)user.second.texRectTop }, { (int)user.second.texRectWidth, (int)user.second.texRectHeight } });
+						tmpPlayer.setTexID((Cfg::Textures)user.second.texIDStr);
+						tmpPlayer.setWorldSize({ user.second.currSizeX, user.second.currSizeY });
+						tmpPlayer.setCurrOffset({user.second.currOffsetX, user.second.currOffsetY});
 						sf::Sprite tmp{ Cfg::textures.get((Cfg::Textures)user.second.texIDStr) };
-						tmp.setTextureRect(sf::IntRect{ sf::Vector2i{(int)user.second.texRectLeft,(int)user.second.texRectTop},sf::Vector2i{(int)user.second.texRectWidth,(int)user.second.texRectHeight}  });
+						tmp.setTextureRect(tmpPlayer.getTexRect());  //sf::Vector2i{ (int)user.second.texRectLeft,(int)user.second.texRectTop }, sf::Vector2i{ (int)user.second.texRectWidth,(int)user.second.texRectHeight }
+				
+
+
 						//currOffset = { 30.f, 10.f };
-						tmp.setPosition({ user.second.vPos.x * tileSize - 36.f, user.second.vPos.y * tileSize - 30.f });
+						tmp.setPosition( tmpPlayer.getPosition() - tmpPlayer.getCurrOffset());//user.second.vPos.y* tileSize - 30.f });
+					
 						tv.draw(tmp);
 					}
 

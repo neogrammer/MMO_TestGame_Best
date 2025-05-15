@@ -10,6 +10,8 @@
 //
 class Player : public AnimObject
 {
+	bool upPressed, upReleased, downPressed, downReleased, leftPressed, leftReleased, rightPressed, rightReleased;
+	AnimDir startDir;
 //	friend class Physics;
 //	friend class PlayState;
 //	float bgLowBoundX{ 800.f };
