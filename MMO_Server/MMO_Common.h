@@ -58,7 +58,20 @@ struct sPlayerDescription
 	sf::Vector2f vPos = { 0.f,0.f };
 	sf::Vector2f vVel = {0.f,0.f};
 
-	AnimDir dir = AnimDir::Down;
+	
+	float currSizeX{ 0.f };
+	float currSizeY{ 0.f };
+	uint32_t texRectLeft{ 0u };
+	uint32_t texRectTop{ 0u };
+	uint32_t texRectWidth{ 0u };
+	uint32_t texRectHeight{ 0u };
+
+
+	float currOffsetX{ 0.f };
+	float currOffsetY{ 0.f };
+
+	uint32_t texIDStr{ 0 };
+	uint32_t dir = 1;
 	uint32_t currFrame = 0;
 
 

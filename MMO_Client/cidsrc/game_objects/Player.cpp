@@ -2,12 +2,12 @@
 //#include <animation/DuckFold.h>
 #include <iostream>
 Player::Player(sf::Vector2f pos_)
-	: AnimObject{ Cfg::Textures::PlayerAtlas,{{0,0}, { 74, 70 }},{0.f,0.f}, {74.f,70.f}, pos_ }
+	: AnimObject{ Cfg::Textures::PlayerAtlas,{{0,0}, { 148, 140 }},{0.f,0.f}, {148.f,140.f}, pos_ }
 //	, projectiles{}
 {
 	setPosition(pos_);
-	setTexRect({ {0,0},{74,70} });
-	currWorldSize = {74.f,70.f};
+	setTexRect({ {0,0},{148,140} });
+	currWorldSize = {148.f,140.f};
 //
 	std::string pass = loadInFile("player.anim");
 
@@ -16,7 +16,7 @@ Player::Player(sf::Vector2f pos_)
 		std::cout << "\nPlayer Animation file not loaded in properly" << std::endl;
 	}
 	animMgr.switchAnim(AnimName::Idle, AnimDir::Down);
-	setWorldSize({ 74.f,70.f });
+	setWorldSize({ 148.f,140.f });
 //
 //	projectiles.clear();
 }
@@ -423,6 +423,17 @@ void Player::finalize(float dt_, sf::RenderWindow& wnd_)
 	setTexID(Cfg::Textures::PlayerAtlas);
 	setTexRect(animMgr.getTexRect());
 	
+}
+
+void Player::render(sf::RenderWindow& wnd_)
+{
+
+	auto tmp = getPosition();
+	currOffset = { 36.f, 30.f };
+	setPosition(tmp - currOffset);
+	wnd_.draw(*this);
+	setPosition(tmp);
+
 }
 
 	//

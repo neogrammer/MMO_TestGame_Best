@@ -871,16 +871,16 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 		for (auto& object : mapObjects)
 		{
 			// Draw Boundary
-			sf::CircleShape shp{ 32.f };
-			shp.setFillColor(sf::Color::White);
-			shp.setOutlineColor(sf::Color::Transparent);
-			shp.setOutlineThickness(0);
-			shp.setPosition({ object.second.vPos.x * tileSize - 32.f, object.second.vPos.y * tileSize - 32.f });
+			//sf::CircleShape shp{ 32.f };
+			//shp.setFillColor(sf::Color::White);
+			//shp.setOutlineColor(sf::Color::Transparent);
+			//shp.setOutlineThickness(0);
+			//shp.setPosition({ object.second.vPos.x * tileSize - 32.f, object.second.vPos.y * tileSize - 32.f });
 
 
 
 
-			tv.draw(shp);
+			//tv.draw(shp);
 			if (object.first == this->nPlayerID)
 			{
 
@@ -896,10 +896,6 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 			}
 
 		}
-
-
-
-
 
 		sf::Text nameText{ fnt };
 
@@ -966,6 +962,20 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 		msg.header.id = GameMsg::Game_UpdatePlayer;
 		mapObjects[nPlayerID].vPos = object.pos;
 		mapObjects[nPlayerID].vVel = object.vel;
+		mapObjects[nPlayerID].currSizeX = player.getWorldSize().x;
+		mapObjects[nPlayerID].currSizeY = player.getWorldSize().y;
+
+		mapObjects[nPlayerID].dir = (uint32_t)player.animMgr.getCurrDir();
+		mapObjects[nPlayerID].currOffsetX = player.getCurrOffset().x;
+		mapObjects[nPlayerID].currOffsetY = player.getCurrOffset().y;
+
+		mapObjects[nPlayerID].currFrame = (uint32_t)player.animMgr.getCurrIndex();
+		mapObjects[nPlayerID].texIDStr = (uint32_t)player.getTexID();
+		mapObjects[nPlayerID].texRectLeft = player.getTexRect().position.x;
+		mapObjects[nPlayerID].texRectTop = player.getTexRect().position.y;
+		mapObjects[nPlayerID].texRectWidth = player.getTexRect().size.x;
+		mapObjects[nPlayerID].texRectHeight = player.getTexRect().size.y;
+
 		msg << mapObjects[nPlayerID];
 		Send(msg);
 	}
@@ -1092,7 +1102,18 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 
 					renderScene();
 
-					tv.draw(player);
+					player.render(tv);
+
+					// draw other players
+					for (auto& user : mapObjects)
+					{
+						if (user.first == object.ownerID) continue;
+						sf::Sprite tmp{ Cfg::textures.get((Cfg::Textures)user.second.texIDStr) };
+						tmp.setTextureRect(sf::IntRect{ sf::Vector2i{(int)user.second.texRectLeft,(int)user.second.texRectTop},sf::Vector2i{(int)user.second.texRectWidth,(int)user.second.texRectHeight}  });
+						//currOffset = { 30.f, 10.f };
+						tmp.setPosition({ user.second.vPos.x * tileSize - 36.f, user.second.vPos.y * tileSize - 30.f });
+						tv.draw(tmp);
+					}
 
 
 					tv.display();

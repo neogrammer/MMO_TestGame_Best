@@ -9,98 +9,98 @@ ANIMATION
 +
 32
 Idle Up
-PlayerAtlas 4 1 0 0 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 0 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle UpRight
-PlayerAtlas 4 1 0 1 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 1 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle Right
-PlayerAtlas 4 1 0 2 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 2 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle DownRight
-PlayerAtlas 4 1 0 3 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 3 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle Down
-PlayerAtlas 4 1 0 4 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 4 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle DownLeft
-PlayerAtlas 4 1 0 5 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 5 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle Left
-PlayerAtlas 4 1 0 6 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 6 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Idle UpLeft
-PlayerAtlas 4 1 0 7 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 7 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running Up
-PlayerAtlas 4 1 0 0 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 0 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running UpRight
-PlayerAtlas 4 1 0 1 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 1 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running Right
-PlayerAtlas 4 1 0 2 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 2 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running DownRight
-PlayerAtlas 4 1 0 3 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 3 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running Down
-PlayerAtlas 4 1 0 4 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 4 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running DownLeft
-PlayerAtlas 4 1 0 5 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 5 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running Left
-PlayerAtlas 4 1 0 6 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 6 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Running UpLeft
-PlayerAtlas 4 1 0 7 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 7 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting Up
-PlayerAtlas 4 1 0 8 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 8 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting UpRight
-PlayerAtlas 4 1 0 9 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 9 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting Right
-PlayerAtlas 4 1 0 10 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 10 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting DownRight
-PlayerAtlas 4 1 0 11 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 11 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting Down
-PlayerAtlas 4 1 0 12 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 12 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting DownLeft
-PlayerAtlas 4 1 0 13 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 13 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting Left
-PlayerAtlas 4 1 0 14 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 14 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 Shooting UpLeft
-PlayerAtlas 4 1 0 15 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 15 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting Up
-PlayerAtlas 4 1 0 8 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 8 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting UpRight
-PlayerAtlas 4 1 0 9 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 9 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting Right
-PlayerAtlas 4 1 0 10 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 10 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting DownRight
-PlayerAtlas 4 1 0 11 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 11 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting Down
-PlayerAtlas 4 1 0 12 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 12 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting DownLeft
-PlayerAtlas 4 1 0 13 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 13 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting Left
-PlayerAtlas 4 1 0 14 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 14 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0
 RunningAndShooting UpLeft
-PlayerAtlas 4 1 0 15 4 74 70 100 Normal 0 0 1 0 0
-0 74 70 0 0 0 0 0 0
+PlayerAtlas 4 1 0 15 4 148 140 100 Normal 0 0 1 0 0
+0 148 140 0 0 0 0 0 0

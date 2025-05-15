@@ -31,7 +31,7 @@ void Cfg::initSounds()
 
 void Cfg::initTextures()
 {
-	textures.load(Textures::PlayerAtlas, "assets/textures/players/playerSheet.png");
+	textures.load(Textures::PlayerAtlas, "assets/textures/players/playerSheet2.png");
 	textures.load(Textures::Stage_1_Tileset, "assets/textures/tilesets/stage_1_tileset.png");
 	textures.load(Textures::Invariant, "assets/textures/misc/Invariant.png");
 

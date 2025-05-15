@@ -181,6 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\textures\players\playerSheet.png" />
+    <Image Include="assets\textures\players\playerSheet2.png" />
     <Image Include="assets\textures\tilesets\stage_1_tileset.png" />
   </ItemGroup>
   <ItemGroup>

@@ -124,12 +124,15 @@
     <Image Include="assets\textures\players\playerSheet.png">
       <Filter>assets\textures\player</Filter>
     </Image>
+    <Image Include="assets\textures\players\playerSheet2.png">
+      <Filter>assets\textures\player</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\data\stage_1.json">
+    <None Include="assets\data\player.anim">
       <Filter>assets\data</Filter>
     </None>
-    <None Include="assets\data\player.anim">
+    <None Include="assets\data\stage_1.json">
       <Filter>assets\data</Filter>
     </None>
   </ItemGroup>

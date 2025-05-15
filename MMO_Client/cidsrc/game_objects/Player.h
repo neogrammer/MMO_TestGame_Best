@@ -69,6 +69,7 @@ public:
 	void handleInput() override final;
 	void update(float dt_) override final;
 	void finalize(float dt_, sf::RenderWindow& wnd_) override final;
+	void render(sf::RenderWindow& wnd_);
 //
 //	void setBGSize(float lx_, float hx_, float ly_, float hy_);
 //
