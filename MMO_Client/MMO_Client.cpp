@@ -261,7 +261,7 @@ public:
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
 
 		tv.create( sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed , settings);
-		if (Connect("127.0.0.1", 60000))
+		if (Connect("192.168.0.6", 60000))
 		{
 			object.pos = { 3.f,3.f };
 			return true;

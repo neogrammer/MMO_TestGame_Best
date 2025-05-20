@@ -77,7 +77,7 @@
     <IncludePath>C:\sdks\sfml3\include;C:\sdks\asio-1.30.2\include;C:\Users\jlhar\OneDrive\Desktop\VS_PJX\MMO_NETCOMMON_Master\NetCommon;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)MMO_Server;$(SolutionDir)..\sfml3\include;$(SolutionDir)..\asio-1.30.2\include;$(SolutionDir)..\NetCommon;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)../json;$(SolutionDir)MMO_Server;$(SolutionDir)..\sfml3\include;$(SolutionDir)..\asio-1.30.2\include;$(SolutionDir)..\NetCommon;$(IncludePath)</IncludePath>
     <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
