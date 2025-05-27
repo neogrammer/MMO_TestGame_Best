@@ -231,6 +231,14 @@ public:
 	}
 
 private:
+	float normalShotDelay{ 0.1f };
+	float normalShotElapsed{ 0.f };
+	bool shootOnCooldown{ false };
+	bool shootHeld{ false };
+	bool shootDown{ false };
+	bool shootReleased{ false };
+	bool shootPressed{ false };
+	float bulletRadius{ 4.f };
 	uint32_t nPlayerID = 0;
 	sPlayerDescription descPlayer;
 	const char* sAppName;
@@ -261,7 +269,7 @@ public:
 		settings.attributeFlags = sf::ContextSettings::Attribute::Core;
 
 		tv.create( sf::VideoMode({1600U, 900U},32U), "MMO CLIENT", sf::State::Windowed , settings);
-		if (Connect("192.168.0.6", 60000))
+		if (Connect("24.236.104.52", 60000))
 		{
 			object.pos = { 3.f,3.f };
 			return true;
@@ -534,76 +542,131 @@ public:
 
 
 
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space))
+			if (shootOnCooldown)
 			{
-				const float BSPD{ 20.f };
-				auto& p = projectiles[nPlayerID];
-				p.emplace_back(WorldObject{});
-				p[p.size() - 1].ownerID = nPlayerID;
-				p[p.size() - 1].pos = object.pos;
-				p[p.size() - 1].vel = { 0.f,0.f };
-				p[p.size() - 1].fRad = 1.f;
-
-				switch (currDir) {
-				case Direction::N:
+				normalShotElapsed += dt;
+				if (normalShotElapsed >= normalShotDelay)
 				{
-					p[p.size() - 1].vel = sf::Vector2f{ 0.f,-1.f * BSPD };
+					normalShotElapsed = 0.f;
+					shootOnCooldown = false;
 				}
-				break;
-				case Direction::NE:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ .7071f * BSPD,-.7071f * BSPD };
-				}
-				break;
-				case Direction::E:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ 1.f * BSPD,0.f };
-				}
-				break;
-				case Direction::SE:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ .7071f * BSPD,.7071f * BSPD };
-				}
-				break;
-				case Direction::S:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ 0.f,1.f * BSPD };
-				}
-				break;
-				case Direction::SW:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ -.7071f * BSPD,.7071f * BSPD };
-				}
-				break;
-				case Direction::W:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ -1.f * BSPD,0.f };
-				}
-				break;
-				case Direction::NW:
-				{
-					p[p.size() - 1].vel = sf::Vector2f{ -.7071f * BSPD,-.7071f * BSPD };
-				}
-				break;
-				default:
-				{
-				}
-				break;
-				}
-
-				cnet::message<GameMsg> msgAddBullet;
-				msgAddBullet.header.id = GameMsg::Game_AddBullet;
-				BulletDescription bd{};
-				bd.fRad = p[p.size() - 1].fRad;
-				bd.nUniqueID = p[p.size() - 1].ownerID;
-				bd.pos = p[p.size() - 1].pos;
-				bd.vel = p[p.size() - 1].vel;
-				bd.index = (uint32_t)(p.size() - 1);
-				msgAddBullet << bd;
-
-				Send(msgAddBullet);
-
 			}
+			
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Space))
+				{
+					if (shootDown)
+					{
+						shootHeld = true;
+						shootPressed = false;
+						shootReleased = false;
+					}
+					else
+					{
+						shootHeld = false;
+						shootPressed = true;
+						shootReleased = false;
+
+					}
+
+					shootDown = true;
+
+					if (!shootOnCooldown)
+					{
+
+						const float BSPD{ 20.f };
+						auto& p = projectiles[nPlayerID];
+						shootOnCooldown = true;
+						p.emplace_back(WorldObject{});
+						p[p.size() - 1].ownerID = nPlayerID;
+						p[p.size() - 1].pos = object.pos;
+						p[p.size() - 1].vel = { 0.f,0.f };
+						p[p.size() - 1].fRad = 1.f;
+
+						switch (currDir) {
+						case Direction::N:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ 0.f,-1.f * BSPD };
+						}
+						break;
+						case Direction::NE:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ .7071f * BSPD,-.7071f * BSPD };
+						}
+						break;
+						case Direction::E:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ 1.f * BSPD,0.f };
+						}
+						break;
+						case Direction::SE:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ .7071f * BSPD,.7071f * BSPD };
+						}
+						break;
+						case Direction::S:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ 0.f,1.f * BSPD };
+						}
+						break;
+						case Direction::SW:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ -.7071f * BSPD,.7071f * BSPD };
+						}
+						break;
+						case Direction::W:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ -1.f * BSPD,0.f };
+						}
+						break;
+						case Direction::NW:
+						{
+							p[p.size() - 1].vel = sf::Vector2f{ -.7071f * BSPD,-.7071f * BSPD };
+						}
+						break;
+						default:
+						{
+						}
+						break;
+						}
+
+						cnet::message<GameMsg> msgAddBullet;
+						msgAddBullet.header.id = GameMsg::Game_AddBullet;
+						BulletDescription bd{};
+						bd.fRad = p[p.size() - 1].fRad;
+						bd.nUniqueID = p[p.size() - 1].ownerID;
+						bd.pos = p[p.size() - 1].pos;
+						bd.vel = p[p.size() - 1].vel;
+						bd.index = (uint32_t)(p.size() - 1);
+						msgAddBullet << bd;
+
+						Send(msgAddBullet);
+					}
+				}
+				else
+				{
+					if (shootHeld || shootDown)
+					{
+						shootReleased = true;
+					}
+					else
+					{
+						shootReleased = false;
+					}
+					shootDown = false;	
+					shootHeld = false;
+					shootPressed = false;
+				}
+
+				if (shootPressed)
+				{
+					
+					player.animMgr.switchAnim(AnimName::RunningAndShooting, player.animMgr.getCurrDir());
+				}
+				else if (shootReleased)
+				{
+					player.animMgr.switchAnim(AnimName::Idle, player.animMgr.getCurrDir());
+				}
+			
 		}
 	}
 
@@ -737,6 +800,8 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 			return isBlocking(tm.getTileType(cy * w + cx));
 		};
 
+	std::vector<int> indices{};
+
 	for (auto& playerBullets : projectiles)
 	{
 		for (auto& bullet : playerBullets.second)
@@ -766,6 +831,13 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 					- length(delta);
 					if (overlap > 0.f && !std::isnan(overlap))
 					{
+					/*	BulletDescription desc;
+						msg >> desc;
+						projectiles[desc.nUniqueID].erase(projectiles[desc.nUniqueID].begin() + (desc.index));
+
+						if ()*/
+						std::cout << "Bullet Destroyed" << std::endl;
+
 						sf::Vector2f n = (delta == sf::Vector2f{ 0,0 })
 							? sf::Vector2f{ 0,0 }
 						: normalize(delta);
@@ -926,8 +998,9 @@ void updateAndCollideProjectiles(float dt, TileMap& tm)
 		{
 			for (auto& bullet : playerBullets.second)
 			{
-				sf::CircleShape shp{ 3.f };
+				sf::CircleShape shp{ bulletRadius };
 				shp.setFillColor(sf::Color::Yellow);
+				shp.setOrigin({bulletRadius, bulletRadius});
 				shp.setPosition({ bullet.pos.x * tileSize, bullet.pos.y * tileSize });
 				tv.draw(shp);
 			}
